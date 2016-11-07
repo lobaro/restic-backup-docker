@@ -17,6 +17,7 @@ ENV RESTIC_TAG=""
 ENV NFS_TARGET=""
 # By default backup every 6 hours
 ENV BACKUP_CRON="* */6 * * *"
+ENV RESTIC_FORGET_ARGS=""
 
 # /data is the dir where you have to put the data to be backed up
 VOLUME /data
