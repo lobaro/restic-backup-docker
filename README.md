@@ -1,7 +1,7 @@
 # Restic Backup Docker Container
 A docker container to automate [restic backups](https://restic.github.io/)
 
-This container runs restic backups in regular intervalls. 
+This container runs restic backups in regular intervals. 
 
 * Easy setup and maintanance
 * Support for different targets (currently: NFS, SFTP)
