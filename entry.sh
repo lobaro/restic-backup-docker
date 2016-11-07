@@ -9,7 +9,7 @@ fi
 
 if [ ! -f "$RESTIC_REPOSITORY/config" ]; then
     echo "Restic repository does not exists. Running restic init."
-    restic init
+    restic init | true
 fi
 
 echo "Setup backup cron job with cron expression: ${BACKUP_CRON}"
