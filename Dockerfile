@@ -2,7 +2,7 @@ FROM gliderlabs/alpine:3.3
 MAINTAINER info@lobaro.com
 
 RUN echo http://nl.alpinelinux.org/alpine/v3.4/community >> /etc/apk/repositories
-RUN apk add --no-cache git go nfs-utils fuse
+RUN apk add --no-cache git go nfs-utils openssh fuse
 RUN git clone https://github.com/restic/restic \
   && cd restic \
   && go run build.go \
