@@ -1,4 +1,4 @@
-# restic-backup-docker
+# Restic Backup Docker Container
 A docker container to automate [restic backups](https://restic.github.io/)
 
 This container runs restic backups in regular intervalls. 
