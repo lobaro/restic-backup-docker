@@ -79,7 +79,4 @@ Now you can simply specify the restic repository to be an [SFTP repository](http
 
 # TODO
 
-* Support AWS backups
-* Support cron that runs `restic check` regularly
-* Support cron that runs `restic prune` regularly
 * Add testsetup based on docker-compose
