@@ -44,6 +44,16 @@ docker exec -ti backup-test /bin/sh
 
 Now you can use restic [as documented](https://restic.readthedocs.io/en/stable/Manual/), e.g. try to run `restic snapshots` to list all your snapshots.
 
+## Logfiles
+Logfiles inside the container:
+
+```
+docker logs
+```
+Shows `/var/log/cron.log`
+
+Additionally you can see the the full log of the last backup and forget comman in `/var/log/backup-last.log` inside the container.
+
 # Customize the Container
 
 The container is setup by setting [environment variables](https://docs.docker.com/engine/reference/run/#/env-environment-variables) and [volumes](https://docs.docker.com/engine/reference/run/#volume-shared-filesystems).
