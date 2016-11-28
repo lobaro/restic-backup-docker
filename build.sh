@@ -1,3 +1,3 @@
 #!/bin/sh
 
-docker build --rm -t backup-test .
+docker build --rm -t restic-backup .

@@ -10,6 +10,6 @@ docker run --privileged --name backup-test \
 -e "BACKUP_CRON=* * * * *" \
 -v ~/test-data:/data \
 -v ~/test-repo/:/mnt/restic \
--t backup-test
+-t restic-backup
 
 
