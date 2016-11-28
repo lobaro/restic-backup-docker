@@ -52,7 +52,7 @@ docker logs
 ```
 Shows `/var/log/cron.log`
 
-Additionally you can see the the full log of the last backup and forget comman in `/var/log/backup-last.log` inside the container.
+Additionally you can see the the full log of the last `backup` and `forget` command in `/var/log/backup-last.log` inside the container.
 
 # Customize the Container
 
