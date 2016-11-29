@@ -65,7 +65,7 @@ The container is setup by setting [environment variables](https://docs.docker.co
 * `RESTIC_TAG` - Optional. To tag the images created by the container.
 * `NFS_TARGET` - Optional. If set the given NFS is mounted, i.e. `mount -o nolock -v ${NFS_TARGET} /mnt/restic`. `RESTIC_REPOSITORY` must remain it's default value!
 * `BACKUP_CRON` - A cron expression to run the backup. Default: `* */6 * * *` aka every 6 hours.
-* `RESTIC_FORGET_ARGS` - Optional. Only if specified `restic forget` is run with the given arguments after each backup. Example value: `-e "RESTIC_FORGET_ARGS=--keep-last 10 --keep-hourly 24 --keep-daily 7 --keep-weekly 52 --keep-monthly 12 --keep-yearly 100"`
+* `RESTIC_FORGET_ARGS` - Optional. Only if specified `restic forget` is run with the given arguments after each backup. Example value: `-e "RESTIC_FORGET_ARGS=--keep-last 10 --keep-hourly 24 --keep-daily 7 --keep-weekly 52 --keep-monthly 120 --keep-yearly 100"`
 
 ## Volumes
 
