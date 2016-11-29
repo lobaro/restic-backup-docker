@@ -14,7 +14,7 @@ fi
 if [ -n "${RESTIC_FORGET_ARGS}" ]; then
     echo "Forget about old snapshots based on RESTIC_FORGET_ARGS = ${RESTIC_FORGET_ARGS}" >> /var/log/cron.log
     restic forget ${RESTIC_FORGET_ARGS} >> /var/log/backup-last.log 2>&1
-
+    rc=$?
     if [[ $rc == 0 ]]; then
         echo "Forget Successfull" >> /var/log/cron.log
     else
