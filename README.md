@@ -45,14 +45,14 @@ docker exec -ti backup-test /bin/sh
 Now you can use restic [as documented](https://restic.readthedocs.io/en/stable/Manual/), e.g. try to run `restic snapshots` to list all your snapshots.
 
 ## Logfiles
-Logfiles inside the container:
+Logfiles are inside the container. If needed you can create volumes for them.
 
 ```
 docker logs
 ```
 Shows `/var/log/cron.log`
 
-Additionally you can see the the full log of the last `backup` and `forget` command in `/var/log/backup-last.log` inside the container.
+Additionally you can see the the full log, including restic output, of the last execution in `/var/log/backup-last.log`. When the backup fails the log is copied to `/var/log/restic-error-last.log`.
 
 # Customize the Container
 
