@@ -1,13 +1,13 @@
-FROM gliderlabs/alpine:3.3
+FROM golang:1.7-alpine
 MAINTAINER info@lobaro.com
 
 RUN echo http://nl.alpinelinux.org/alpine/v3.4/community >> /etc/apk/repositories
-RUN apk add --no-cache git go nfs-utils openssh fuse
+RUN apk add --no-cache git nfs-utils openssh fuse
 RUN git clone https://github.com/restic/restic \
   && cd restic \
   && go run build.go \
   && cp restic /usr/local/bin/
-RUN apk del git go
+RUN apk del git
 
 RUN mkdir /mnt/restic
 
