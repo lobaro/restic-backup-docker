@@ -38,17 +38,6 @@ if [ -n "${RESTIC_FORGET_ARGS}" ]; then
     logLast "Finished forget at $(date)"
     if [[ $rc == 0 ]]; then
         echo "Forget Successfull"
-        echo "Prune obsolete data"
-        restic prune >> ${lastLogfile} 2>&1
-        rc=$?
-        logLast "Finished prune at $(date)"
-        if [[ $rc == 0 ]]; then
-          echo "Prune Successfull"
-        else
-          echo "Prune Failed with Status ${rc}"
-          restic unlock
-          copyErrorLog
-        fi
     else
         echo "Forget Failed with Status ${rc}"
         restic unlock
