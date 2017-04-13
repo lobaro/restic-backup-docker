@@ -9,6 +9,12 @@ This container runs restic backups in regular intervals.
 
 **Container**: [lobaro/restic-backup-docker](https://hub.docker.com/r/lobaro/restic-backup-docker/)
 
+Stable
+```
+docker pull lobaro/restic-backup-docker:v1.0
+```
+
+Latest (experimental)
 ```
 docker pull lobaro/restic-backup-docker
 ```
@@ -87,6 +93,16 @@ Now you can simply specify the restic repository to be an [SFTP repository](http
 -e "RESTIC_REPOSITORY=sftp:user@host:/tmp/backup"
 ```
 
-# TODO
+# Changelog
 
-* Add testsetup based on docker-compose
+Versioning follows [Semantic versioning](http://semver.org/)
+
+! Breaking changes
+
+**:latest**  
+* ! `--prune` must be passed to `RESTIC_FORGET_ARGS` to execute prune after forget.
+* Switch to base Docker container to `golang:1.7-alpine` to support latest restic build.
+
+
+**:v1.0**
+* First stable version
