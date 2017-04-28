@@ -28,5 +28,9 @@ RUN chmod +x /bin/backup
 COPY entry.sh /entry.sh
 
 RUN touch /var/log/cron.log
+
+WORKDIR "/"
+
+#ENTRYPOINT ["ls"]
 ENTRYPOINT ["/entry.sh"]
 
