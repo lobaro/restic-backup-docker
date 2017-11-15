@@ -46,4 +46,4 @@ if [ -n "${RESTIC_FORGET_ARGS}" ]; then
 fi
 
 end=`date +%s`
-echo "Finished Backup at $(date +"%Y-%m-%d %H:%M:%S") after $((end-start)) sconds"
+echo "Finished Backup at $(date +"%Y-%m-%d %H:%M:%S") after $((end-start)) seconds"
