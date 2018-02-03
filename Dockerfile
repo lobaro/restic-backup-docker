@@ -1,7 +1,7 @@
-FROM golang:1.7-alpine
+FROM golang:1.9-alpine
 MAINTAINER info@lobaro.com
 
-RUN echo http://nl.alpinelinux.org/alpine/v3.4/community >> /etc/apk/repositories
+RUN echo http://nl.alpinelinux.org/alpine/v3.6/community >> /etc/apk/repositories
 RUN apk add --no-cache git nfs-utils openssh fuse
 RUN git clone https://github.com/restic/restic \
   && cd restic \
