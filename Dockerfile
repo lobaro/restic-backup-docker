@@ -1,4 +1,4 @@
-FROM busybox
+FROM busybox:glibc
 
 # Get restic executable
 ENV RESTIC_VERION=0.8.1
