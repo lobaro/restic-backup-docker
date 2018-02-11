@@ -28,7 +28,6 @@ ENV RESTIC_JOB_ARGS=""
 VOLUME /data
 
 COPY backup.sh /bin/backup
-RUN chmod +x /bin/backup
 
 COPY entry.sh /entry.sh
 
