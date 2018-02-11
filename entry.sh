@@ -3,6 +3,12 @@ set -e
 
 echo "Starting container ..."
 
+RESTIC_CMD=restic
+
+if [ -n "${ROOT_CERT}" ]; then
+	RESTIC_CMD="${RESTIC_CMD} --cert ${ROOT_CERT}"
+fi
+
 if [ -n "${NFS_TARGET}" ]; then
     echo "Mounting NFS based on NFS_TARGET: ${NFS_TARGET}"
     mount -o nolock -v ${NFS_TARGET} /mnt/restic
