@@ -1,4 +1,4 @@
-FROM golang:1.9-alpine
+FROM golang:1.9-alpine as builder
 MAINTAINER info@lobaro.com
 
 RUN echo http://nl.alpinelinux.org/alpine/v3.6/community >> /etc/apk/repositories
@@ -9,7 +9,11 @@ RUN git clone https://github.com/restic/restic \
   && cp restic /usr/local/bin/
 RUN apk del git
 
-RUN mkdir /mnt/restic
+
+FROM busybox
+
+COPY --from=builder /usr/local/bin/restic /bin/
+RUN mkdir -p /mnt/restic /var/spool/cron/crontabs
 
 ENV RESTIC_REPOSITORY=/mnt/restic
 ENV RESTIC_PASSWORD=""
