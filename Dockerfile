@@ -1,15 +1,17 @@
-FROM golang:1.9-alpine
-MAINTAINER info@lobaro.com
+FROM alpine as certs
+RUN apk update && apk add ca-certificates
 
-RUN echo http://nl.alpinelinux.org/alpine/v3.6/community >> /etc/apk/repositories
-RUN apk add --no-cache git nfs-utils openssh fuse
-RUN git clone https://github.com/restic/restic \
-  && cd restic \
-  && go run build.go \
-  && cp restic /usr/local/bin/
-RUN apk del git
 
-RUN mkdir /mnt/restic
+FROM busybox:glibc
+
+COPY --from=certs /etc/ssl/certs /etc/ssl/certs
+
+# Get restic executable
+ENV RESTIC_VERION=0.8.1
+ADD https://github.com/restic/restic/releases/download/v${RESTIC_VERION}/restic_${RESTIC_VERION}_linux_amd64.bz2 /
+RUN bzip2 -d restic_${RESTIC_VERION}_linux_amd64.bz2 && mv restic_${RESTIC_VERION}_linux_amd64 /bin/restic && chmod +x /bin/restic
+
+RUN mkdir -p /mnt/restic /var/spool/cron/crontabs /var/log
 
 ENV RESTIC_REPOSITORY=/mnt/restic
 ENV RESTIC_PASSWORD=""
@@ -24,8 +26,6 @@ ENV RESTIC_JOB_ARGS=""
 VOLUME /data
 
 COPY backup.sh /bin/backup
-RUN chmod +x /bin/backup
-
 COPY entry.sh /entry.sh
 
 RUN touch /var/log/cron.log
