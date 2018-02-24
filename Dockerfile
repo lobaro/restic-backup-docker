@@ -7,9 +7,9 @@ FROM busybox:glibc
 COPY --from=certs /etc/ssl/certs /etc/ssl/certs
 
 # Get restic executable
-ENV RESTIC_VERION=0.8.1
-ADD https://github.com/restic/restic/releases/download/v${RESTIC_VERION}/restic_${RESTIC_VERION}_linux_amd64.bz2 /
-RUN bzip2 -d restic_${RESTIC_VERION}_linux_amd64.bz2 && mv restic_${RESTIC_VERION}_linux_amd64 /bin/restic && chmod +x /bin/restic
+ENV RESTIC_VERSION=0.8.1
+ADD https://github.com/restic/restic/releases/download/v${RESTIC_VERSION}/restic_${RESTIC_VERSION}_linux_amd64.bz2 /
+RUN bzip2 -d restic_${RESTIC_VERSION}_linux_amd64.bz2 && mv restic_${RESTIC_VERSION}_linux_amd64 /bin/restic && chmod +x /bin/restic
 
 RUN mkdir -p /mnt/restic /var/spool/cron/crontabs /var/log
 
