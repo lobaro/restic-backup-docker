@@ -1,5 +1,5 @@
 FROM alpine as certs
-RUN apk update && apk add ca-certificates
+RUN apk add --no-cache ca-certificates
 
 
 FROM busybox:glibc
