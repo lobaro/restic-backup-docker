@@ -18,7 +18,7 @@ ENV RESTIC_PASSWORD=""
 ENV RESTIC_TAG=""
 ENV NFS_TARGET=""
 # By default backup every 6 hours
-ENV BACKUP_CRON="* */6 * * *"
+ENV BACKUP_CRON="0 */6 * * *"
 ENV RESTIC_FORGET_ARGS=""
 ENV RESTIC_JOB_ARGS=""
 
