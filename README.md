@@ -19,6 +19,8 @@ Latest (experimental)
 docker pull lobaro/restic-backup-docker
 ```
 
+Please don't hesitate to report any issue you find. **Thanks.**
+
 # Test the container
 
 Clone this repository
