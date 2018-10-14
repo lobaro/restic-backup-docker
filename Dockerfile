@@ -7,7 +7,7 @@ FROM busybox:glibc
 COPY --from=certs /etc/ssl/certs /etc/ssl/certs
 
 # Get restic executable
-ENV RESTIC_VERSION=0.8.1
+ENV RESTIC_VERSION=0.9.3
 ADD https://github.com/restic/restic/releases/download/v${RESTIC_VERSION}/restic_${RESTIC_VERSION}_linux_amd64.bz2 /
 RUN bzip2 -d restic_${RESTIC_VERSION}_linux_amd64.bz2 && mv restic_${RESTIC_VERSION}_linux_amd64 /bin/restic && chmod +x /bin/restic
 
@@ -32,6 +32,5 @@ RUN touch /var/log/cron.log
 
 WORKDIR "/"
 
-#ENTRYPOINT ["ls"]
 ENTRYPOINT ["/entry.sh"]
 
