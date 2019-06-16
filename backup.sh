@@ -22,7 +22,11 @@ logLast "RESTIC_REPOSITORY: ${RESTIC_REPOSITORY}"
 logLast "AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}"
 
 # Do not save full backup log to logfile but to backup-last.log
-restic backup /data ${RESTIC_JOB_ARGS} --tag=${RESTIC_TAG?"Missing environment variable RESTIC_TAG"} >> ${lastLogfile} 2>&1
+# restic -r rclone:remote:laptop-backup -o rclone.program=%RCLONE% -o rclone.args=%ARGS% backup "E:\Iphone photos\
+restic backup /data ${RESTIC_JOB_ARGS} \
+--tag=${RESTIC_TAG?"Missing environment variable RESTIC_TAG"} \
+-o rclone.program=rclone \
+-o rclone.args=${RCLONE_ARGS} >> ${lastLogfile} 2>&1
 rc=$?
 logLast "Finished backup at $(date)"
 if [[ $rc == 0 ]]; then
