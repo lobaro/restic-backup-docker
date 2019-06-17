@@ -1,0 +1,28 @@
+version: '2'
+
+services:
+  restic:
+    build: .
+    environment:
+      - RESTIC_REPOSITORY="rclone:remote:server-backup"
+      - RCLONE_ARGS="serve restic --stdio --bwlimit 1M --mega-hard-delete --verbose --config=/rclone.conf"
+      - RESTIC_TAG=latest
+      - RESTIC_PASSWORD=test
+    volumes: 
+      - portainer_data:/data/portainer_data
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ~/rclone.conf:/rclone.conf
+    
+volumes: 
+  portainer_data:
+    external:
+      name: portainer_data
+  gitea_data:
+    external:
+      name: gitea_data
+  gitea_postgres:
+    external:
+      name: gitea_postgres
+  jenkins_home:
+    external:
+      name: jenkins_home

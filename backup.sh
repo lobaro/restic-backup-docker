@@ -20,6 +20,7 @@ logLast "RESTIC_FORGET_ARGS: ${RESTIC_FORGET_ARGS}"
 logLast "RESTIC_JOB_ARGS: ${RESTIC_JOB_ARGS}"
 logLast "RESTIC_REPOSITORY: ${RESTIC_REPOSITORY}"
 logLast "AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}"
+logLast "RCLONE_ARGS: ${RCLONE_ARGS}"
 
 # Do not save full backup log to logfile but to backup-last.log
 # restic -r rclone:remote:laptop-backup -o rclone.program=%RCLONE% -o rclone.args=%ARGS% backup "E:\Iphone photos\
