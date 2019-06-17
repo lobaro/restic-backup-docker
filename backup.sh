@@ -23,7 +23,9 @@ logLast "AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}"
 
 # Do not save full backup log to logfile but to backup-last.log
 # restic -r rclone:remote:laptop-backup -o rclone.program=%RCLONE% -o rclone.args=%ARGS% backup "E:\Iphone photos\
-restic backup /data ${RESTIC_JOB_ARGS} \
+restic backup /data \
+ -r ${RESTIC_REPOSITORY}\
+ ${RESTIC_JOB_ARGS} \
 --tag=${RESTIC_TAG?"Missing environment variable RESTIC_TAG"} \
 -o rclone.program=rclone \
 -o rclone.args=${RCLONE_ARGS} >> ${lastLogfile} 2>&1
