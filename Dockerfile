@@ -5,7 +5,7 @@ RUN apk add --no-cache ca-certificates
 FROM busybox:glibc as base
 
 COPY --from=certs /etc/ssl/certs /etc/ssl/certs
-ARG ARCH=amd64
+ENV ARCH=amd64
 # Get restic executable
 ARG RESTIC_VERSION=0.9.5
 ADD https://github.com/restic/restic/releases/download/v${RESTIC_VERSION}/restic_${RESTIC_VERSION}_linux_${ARCH}.bz2 /
