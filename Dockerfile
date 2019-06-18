@@ -2,7 +2,7 @@ FROM alpine as certs
 RUN apk add --no-cache ca-certificates
 
 
-FROM busybox:glibc
+FROM busybox:glibc as base
 
 COPY --from=certs /etc/ssl/certs /etc/ssl/certs
 ARG ARCH=amd64
@@ -24,6 +24,17 @@ ENV BACKUP_CRON="0 */6 * * *"
 ENV RESTIC_FORGET_ARGS=""
 ENV RESTIC_JOB_ARGS=""
 
+VOLUME /data
+
+COPY backup.sh /bin/backup
+COPY entry.sh /entry.sh
+
+RUN touch /var/log/cron.log
+WORKDIR "/"
+ENTRYPOINT ["/entry.sh"]
+
+FROM busybox:glibc as rclone
+
 ARG RCLONE_VERSION=current
 
 # install rclone
@@ -35,15 +46,10 @@ RUN unzip rclone-${RCLONE_VERSION}-linux-${ARCH}.zip && \
 
 ENV RCLONE_ARGS=""
 
-# /data is the dir where you have to put the data to be backed up
-VOLUME /data
+COPY --from=base /etc/ssl/certs /etc/ssl/certs
+COPY --from=base /bin/restic /bin/restic
+COPY backup-rclone.sh /bin/backup
+COPY entry-rclone.sh /entry.sh
 
-COPY backup.sh /bin/backup
-COPY entry.sh /entry.sh
 
-RUN touch /var/log/cron.log
-
-WORKDIR "/"
-
-ENTRYPOINT ["/entry.sh"]
 

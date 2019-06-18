@@ -1,7 +1,9 @@
 #!bin/sh
 set -e
 
+
 echo "Starting container ..."
+
 
 RESTIC_CMD=restic
 
@@ -14,9 +16,17 @@ if [ -n "${NFS_TARGET}" ]; then
     mount -o nolock -v ${NFS_TARGET} /mnt/restic
 fi
 
-if [ ! -f "$RESTIC_REPOSITORY/config" ]; then
+# check if the repository already exists.
+restic ${RESTIC_JOB_ARGS} \
+    -o rclone.program=rclone \
+    -o rclone.args=${RCLONE_ARGS} snapshots &>/dev/null
+status=$?
+
+if [ $status != 0 ]; then
     echo "Restic repository '${RESTIC_REPOSITORY}' does not exists. Running restic init."
-    restic init | true
+    restic ${RESTIC_JOB_ARGS} \
+    -o rclone.program=rclone \
+    -o rclone.args=${RCLONE_ARGS} init
 fi
 
 echo "Setup backup cron job with cron expression BACKUP_CRON: ${BACKUP_CRON}"
