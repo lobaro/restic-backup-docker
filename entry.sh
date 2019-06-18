@@ -16,16 +16,15 @@ if [ -n "${NFS_TARGET}" ]; then
     mount -o nolock -v ${NFS_TARGET} /mnt/restic
 fi
 
- 
-
-if [ [ restic -r ${RESTIC_REPOSITORY} \
-    ${RESTIC_JOB_ARGS} \
+# check if the repository already exists.
+restic ${RESTIC_JOB_ARGS} \
     -o rclone.program=rclone \
-    -o rclone.args=${RCLONE_ARGS} snapshots > /dev/null != 0 ] ]; then
-    
+    -o rclone.args=${RCLONE_ARGS} snapshots &>/dev/null
+status=$?
+
+if [ $status != 0 ]; then
     echo "Restic repository '${RESTIC_REPOSITORY}' does not exists. Running restic init."
-    restic -r ${RESTIC_REPOSITORY} \
-     ${RESTIC_JOB_ARGS} \
+    restic ${RESTIC_JOB_ARGS} \
     -o rclone.program=rclone \
     -o rclone.args=${RCLONE_ARGS} init
 fi

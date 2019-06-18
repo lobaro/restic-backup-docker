@@ -20,20 +20,19 @@ logLast "RESTIC_FORGET_ARGS: ${RESTIC_FORGET_ARGS}"
 logLast "RESTIC_JOB_ARGS: ${RESTIC_JOB_ARGS}"
 logLast "RESTIC_REPOSITORY: ${RESTIC_REPOSITORY}"
 logLast "AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}"
+logLast "RCLONE_BWLIMIT: ${RCLONE_BWLIMIT}"
 logLast "RCLONE_ARGS: ${RCLONE_ARGS}"
 
 # Do not save full backup log to logfile but to backup-last.log
 # restic -r rclone:remote:laptop-backup -o rclone.program=%RCLONE% -o rclone.args=%ARGS% backup "E:\Iphone photos\
-restic backup /data \
- -r ${RESTIC_REPOSITORY}\
- ${RESTIC_JOB_ARGS} \
+restic backup /data ${RESTIC_JOB_ARGS} \
 --tag=${RESTIC_TAG?"Missing environment variable RESTIC_TAG"} \
 -o rclone.program=rclone \
 -o rclone.args=${RCLONE_ARGS} >> ${lastLogfile} 2>&1
 rc=$?
 logLast "Finished backup at $(date)"
 if [[ $rc == 0 ]]; then
-    echo "Backup Successfull" 
+    echo "Backup Successfull"
 else
     echo "Backup Failed with Status ${rc}"
     restic unlock
@@ -43,7 +42,9 @@ fi
 
 if [ -n "${RESTIC_FORGET_ARGS}" ]; then
     echo "Forget about old snapshots based on RESTIC_FORGET_ARGS = ${RESTIC_FORGET_ARGS}"
-    restic forget ${RESTIC_FORGET_ARGS} >> ${lastLogfile} 2>&1
+    restic forget ${RESTIC_FORGET_ARGS} \
+    -o rclone.program=rclone \
+    -o rclone.args=${RCLONE_ARGS} >> ${lastLogfile} 2>&1
     rc=$?
     logLast "Finished forget at $(date)"
     if [[ $rc == 0 ]]; then
