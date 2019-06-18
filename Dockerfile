@@ -35,6 +35,9 @@ ENV RESTIC_JOB_ARGS=$RESTIC_JOB_ARGS
 
 VOLUME /data
 
+COPY scripts/check-repo.sh /bin/check-repo.sh
+COPY scripts/repo-init.sh /bin/repo-init.sh
+COPY scripts/trigger-backup.sh /bin/trigger-backup.sh
 COPY backup.sh /bin/backup
 COPY entry.sh /entry.sh
 
@@ -68,8 +71,13 @@ COPY --from=base /var/log /var/log
 COPY --from=base /var/log/cron.log /var/log/cron.log
 COPY --from=base /etc/ssl/certs /etc/ssl/certs
 COPY --from=base /bin/restic /bin/restic
-COPY backup-rclone.sh /bin/backup
-COPY entry-rclone.sh /entry.sh
+
+COPY scripts/check-repo-rclone.sh /bin/check-repo.sh
+COPY scripts/repo-init-rclone.sh /bin/repo-init.sh
+COPY scripts/trigger-backup-rclone.sh /bin/trigger-backup.sh
+
+COPY --from=base /entry.sh /entry.sh
+COPY --from=base /bin/backup /bin/backup
 
 WORKDIR "/"
 ENTRYPOINT ["/entry.sh"]

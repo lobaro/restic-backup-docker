@@ -14,9 +14,12 @@ if [ -n "${NFS_TARGET}" ]; then
     mount -o nolock -v ${NFS_TARGET} /mnt/restic
 fi
 
-if [ ! -f "$RESTIC_REPOSITORY/config" ]; then
+check-repo &>/dev/null
+status=$?
+
+if [ $status != 0 ]; then
     echo "Restic repository '${RESTIC_REPOSITORY}' does not exists. Running restic init."
-    restic init | true
+    repo-init
 fi
 
 echo "Setup backup cron job with cron expression BACKUP_CRON: ${BACKUP_CRON}"
