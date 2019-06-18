@@ -10,7 +10,7 @@ ARG ARCH=amd64
 ARG RESTIC_VERSION=0.9.5
 ADD https://github.com/restic/restic/releases/download/v${RESTIC_VERSION}/restic_${RESTIC_VERSION}_linux_${ARCH}.bz2 /
 RUN bzip2 -d restic_${RESTIC_VERSION}_linux_${ARCH}.bz2 && \
- mv restic_${RESTIC_VERSION}_linux_${ARCH} /bin/restic && \ 
+ mv restic_${RESTIC_VERSION}_linux_${ARCH} /bin/restic && \
  chmod +x /bin/restic
 
 RUN mkdir -p /mnt/restic /var/spool/cron/crontabs /var/log
