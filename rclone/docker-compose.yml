@@ -1,0 +1,17 @@
+version: '2'
+
+services:
+  rclone:
+    container_name: rclone
+    image: restic-rclone
+    build: .
+    environment:
+      - RESTIC_REPOSITORY="rclone:remote:server-backup"
+      - RCLONE_STDIO=1
+      - RCLONE_BWLIMIT=1M
+      - RCLONE_MEGA_HARD_DELETE=1
+      - RCLONE_VERBOSE=1
+      - RCLONE_CONFIG=/rclone.conf
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ~/rclone.conf:/rclone.conf

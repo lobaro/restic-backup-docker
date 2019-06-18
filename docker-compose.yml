@@ -2,21 +2,38 @@ version: '2'
 
 services:
   restic:
+    container_name: restic
+    image: restic-backup
     build: .
     environment:
-      - RESTIC_REPOSITORY="rclone:remote:server-backup"
-      - RESTIC_TAG=latest
+      - RESTIC_REPOSITORY=rest:http://rclone:8080/
+      - RESTIC_TAG=cobrijani.com
       - RESTIC_PASSWORD=test
-      - RCLONE_CONFIG=/rclone
-      - RCLONE_MEGA_HARD_DELETE=true
-      - RCLONE_BWLIMIT=1M
-      - RCLONE_VERBOSE=true
-      - RCLONE_STDIO=true
     volumes:
       - test_data:/data/test_data
       - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - backup
+  rclone:
+    container_name: rclone
+    image: restic-rclone
+    environment:
+      - RESTIC_REPOSITORY="rclone:remote:server-backup"
+      - RCLONE_STDIO=1
+      - RCLONE_BWLIMIT=1M
+      - RCLONE_MEGA_HARD_DELETE=1
+      - RCLONE_VERBOSE=1
+      - RCLONE_CONFIG=/rclone.conf
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
       - ~/rclone.conf:/rclone.conf
-
+    networks:
+      - backup
+    
+networks:
+  backup:
+    external:
+      name: backup
 volumes:
   test_data:
     external:
