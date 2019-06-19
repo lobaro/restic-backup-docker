@@ -13,7 +13,7 @@ if [ -n "${NFS_TARGET}" ]; then
     mount -o nolock -v ${NFS_TARGET} /mnt/restic
 fi
 
-restic ${RESTIC_JOB_ARGS} snapshots &>/dev/null
+restic snapshots &>/dev/null
 status=$?
 echo "Check Repo status $status"
 
@@ -22,8 +22,8 @@ if [ $status != 0 ]; then
     restic init | true
 
     if [ $? == 0 ]; then
-    echo "Failed to init repo"
-    exit 1
+        echo "Failed to init the repository: '${RESTIC_REPOSITORY}'"
+        exit 1
     fi
 fi
 
