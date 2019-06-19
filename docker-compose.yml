@@ -6,35 +6,32 @@ services:
     image: restic-backup
     build: .
     environment:
-      - RESTIC_REPOSITORY=rest:http://rclone:8080/
+      - RESTIC_REPOSITORY=rclone:remote:server-backup
       - RESTIC_TAG=cobrijani.com
-      - RESTIC_PASSWORD=test
-    volumes:
-      - test_data:/data/test_data
-      - /var/run/docker.sock:/var/run/docker.sock
-    networks:
-      - backup
-  rclone:
-    container_name: rclone
-    image: restic-rclone
-    environment:
-      - RESTIC_REPOSITORY="rclone:remote:server-backup"
+      - RESTIC_PASSWORD=${RESTIC_PASSWORD}
       - RCLONE_STDIO=1
       - RCLONE_BWLIMIT=1M
       - RCLONE_MEGA_HARD_DELETE=1
       - RCLONE_VERBOSE=1
       - RCLONE_CONFIG=/rclone.conf
     volumes:
+      - portainer_data:/data/portainer_data
+      - gitea_data:/data/gitea_data
+      - gitea_postgres:/data/gitea_postgres
+      - jenkins_home:/data/jenkins_home
       - /var/run/docker.sock:/var/run/docker.sock
       - ~/rclone.conf:/rclone.conf
-    networks:
-      - backup
-    
-networks:
-  backup:
+
+volumes: 
+  portainer_data:
     external:
-      name: backup
-volumes:
-  test_data:
+      name: portainer_data
+  gitea_data:
     external:
-      name: test_data
+      name: gitea_data
+  gitea_postgres:
+    external:
+      name: gitea_postgres
+  jenkins_home:
+    external:
+      name: jenkins_home
