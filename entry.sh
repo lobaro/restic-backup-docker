@@ -21,7 +21,7 @@ if [ $status != 0 ]; then
     echo "Restic repository '${RESTIC_REPOSITORY}' does not exists. Running restic init."
     restic init | true
 
-    if [ $? == 0 ]; then
+    if [ $? != 0 ]; then
         echo "Failed to init the repository: '${RESTIC_REPOSITORY}'"
         exit 1
     fi
