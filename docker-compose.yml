@@ -14,6 +14,7 @@ services:
       - RCLONE_MEGA_HARD_DELETE=1
       - RCLONE_VERBOSE=1
       - RCLONE_CONFIG=/rclone.conf
+      - RESTIC_FORGET_ARGS="--keep-last 5"
     volumes:
       - portainer_data:/data/portainer_data
       - gitea_data:/data/gitea_data
