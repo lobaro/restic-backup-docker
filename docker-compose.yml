@@ -3,11 +3,21 @@ version: '2'
 services:
   restic:
     container_name: restic
-    image: restic-backup
-    build: .
+    image: cobrijani/restic-backup:rclone-latest
     environment:
-      - RESTIC_REPOSITORY=rclone:remote:server-backup
-      - RESTIC_TAG=cobrijani.com
+      - RESTIC_REPOSITORY=${RESTIC_REPOSITORY}
+      - RESTIC_TAG=${RESTIC_TAG}
+      - RESTIC_PASSWORD=${RESTIC_PASSWORD}
+      - RESTIC_FORGET_ARGS="--keep-last 5"
+    volumes:
+      - data-to-backup:/data/data-to-backup
+
+  restic-rclone:
+    container_name: restic-rclone
+    image: cobrijani/restic-backup:rclone-latest
+    environment:
+      - RESTIC_REPOSITORY=${RESTIC_REPOSITORY}
+      - RESTIC_TAG=${RESTIC_TAG}
       - RESTIC_PASSWORD=${RESTIC_PASSWORD}
       - RCLONE_STDIO=1
       - RCLONE_BWLIMIT=1M
@@ -16,23 +26,11 @@ services:
       - RCLONE_CONFIG=/rclone.conf
       - RESTIC_FORGET_ARGS="--keep-last 5"
     volumes:
-      - portainer_data:/data/portainer_data
-      - gitea_data:/data/gitea_data
-      - gitea_postgres:/data/gitea_postgres
-      - jenkins_home:/data/jenkins_home
+      - data-to-backup:/data/data-to-backup
       - /var/run/docker.sock:/var/run/docker.sock
       - ~/rclone.conf:/rclone.conf
 
-volumes: 
-  portainer_data:
+volumes:
+  data-to-backup:
     external:
-      name: portainer_data
-  gitea_data:
-    external:
-      name: gitea_data
-  gitea_postgres:
-    external:
-      name: gitea_postgres
-  jenkins_home:
-    external:
-      name: jenkins_home
+      name: data-to-backup
