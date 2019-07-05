@@ -3,15 +3,18 @@ RUN apk add --no-cache ca-certificates
 
 
 FROM busybox:glibc as base
-
 COPY --from=certs /etc/ssl/certs /etc/ssl/certs
 
 # Get restic executable
-ENV RESTIC_VERSION=0.9.5
-ADD https://github.com/restic/restic/releases/download/v${RESTIC_VERSION}/restic_${RESTIC_VERSION}_linux_amd64.bz2 /
-RUN bzip2 -d restic_${RESTIC_VERSION}_linux_amd64.bz2 && mv restic_${RESTIC_VERSION}_linux_amd64 /bin/restic && chmod +x /bin/restic
+ARG RESTIC_VERSION=0.9.5
+ARG ARCH=amd64
+ADD https://github.com/restic/restic/releases/download/v${RESTIC_VERSION}/restic_${RESTIC_VERSION}_linux_${ARCH}.bz2 /
+RUN bzip2 -d restic_${RESTIC_VERSION}_linux_${ARCH}.bz2 \
+    && mv restic_${RESTIC_VERSION}_linux_${ARCH} /bin/restic \
+    && chmod +x /bin/restic \
+    && mkdir -p /mnt/restic /var/spool/cron/crontabs /var/log \
+    && /var/log/cron.log
 
-RUN mkdir -p /mnt/restic /var/spool/cron/crontabs /var/log
 
 ENV RESTIC_REPOSITORY=/mnt/restic
 ENV RESTIC_PASSWORD=""
@@ -28,11 +31,10 @@ VOLUME /data
 COPY backup.sh /bin/backup
 COPY entry.sh /entry.sh
 
-RUN touch /var/log/cron.log
 
 WORKDIR "/"
-
 ENTRYPOINT ["/entry.sh"]
+CMD ["tail","-fn0" "/var/log/cron.log"]
 
 FROM busybox:glibc as rclone
 
@@ -66,3 +68,4 @@ COPY --from=base /entry.sh /entry.sh
 
 WORKDIR "/"
 ENTRYPOINT ["/entry.sh"]
+CMD ["tail","-fn0" "/var/log/cron.log"]
