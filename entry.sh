@@ -43,4 +43,4 @@ crond
 
 echo "Container started."
 
-tail -fn0 /var/log/cron.log
+exec "$@"
