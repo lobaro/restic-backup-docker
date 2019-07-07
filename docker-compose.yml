@@ -3,7 +3,7 @@ version: '2'
 services:
   restic:
     container_name: restic
-    image: cobrijani/restic-backup:rclone-latest
+    image: cobrijani/restic-backup:latest
     environment:
       - RESTIC_REPOSITORY=${RESTIC_REPOSITORY}
       - RESTIC_TAG=${RESTIC_TAG}

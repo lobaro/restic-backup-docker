@@ -32,4 +32,4 @@ COPY entry.sh /entry.sh
 
 WORKDIR "/"
 ENTRYPOINT ["/entry.sh"]
-CMD ["tail","-fn0" "/var/log/cron.log"]
+CMD ["tail","-fn0","/var/log/cron.log"]
