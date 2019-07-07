@@ -33,4 +33,4 @@ RUN touch /var/log/cron.log
 WORKDIR "/"
 
 ENTRYPOINT ["/entry.sh"]
-
+CMD ["tail","-fn0","/var/log/cron.log"]
