@@ -32,7 +32,7 @@ Please don't hesitate to report any issue you find. **Thanks.**
 Clone this repository
 
 ```
-git clone https://github.com/Lobaro/restic-backup-docker.git
+git clone https://github.com/Cobrijani/restic-backup-docker.git
 cd restic-backup-docker
 ```
 
