@@ -101,13 +101,3 @@ Now you can simply specify the restic repository to be an [SFTP repository](http
 # Changelog
 
 Versioning follows [Semantic versioning](http://semver.org/)
-
-! Breaking changes
-
-**:latest**
-* ! `--prune` must be passed to `RESTIC_FORGET_ARGS` to execute prune after forget.
-* Switch to base Docker container to `golang:1.7-alpine` to support latest restic build.
-
-
-**:v1.0**
-* First stable version
