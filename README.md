@@ -1,7 +1,13 @@
 # Restic Backup Docker Container
 A docker container to automate [restic backups](https://restic.github.io/)
+
+
 [![](https://images.microbadger.com/badges/image/cobrijani/restic-backup.svg)](https://microbadger.com/images/cobrijani/restic-backup "Get your own image badge on microbadger.com")
 [![](https://images.microbadger.com/badges/version/cobrijani/restic-backup.svg)](https://microbadger.com/images/cobrijani/restic-backup "Get your own version badge on microbadger.com")
+
+RClone:
+[![](https://images.microbadger.com/badges/image/cobrijani/restic-backup:rclone-latest.svg)](https://microbadger.com/images/cobrijani/restic-backup:rclone-latest "Get your own image badge on microbadger.com")
+[![](https://images.microbadger.com/badges/version/cobrijani/restic-backup:rclone-latest.svg)](https://microbadger.com/images/cobrijani/restic-backup:rclone-latest "Get your own version badge on microbadger.com")
 
 This container runs restic backups in regular intervals.
 
