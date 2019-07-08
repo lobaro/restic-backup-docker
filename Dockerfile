@@ -1,6 +1,9 @@
 FROM alpine as certs
 RUN apk add --no-cache ca-certificates
 
+LABEL maintainer="Stefan Bratic"
+
+
 FROM busybox:glibc as base
 COPY --from=certs /etc/ssl/certs /etc/ssl/certs
 
