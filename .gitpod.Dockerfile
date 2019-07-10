@@ -2,8 +2,8 @@ FROM gitpod/workspace-full:latest
 
 USER root
 
-RUN apt-get update \
-    && apt-get install \
+RUN apt-get -y update \
+    && apt-get -y install \
     apt-transport-https \
     ca-certificates \
     curl \
@@ -15,7 +15,7 @@ RUN apt-get update \
    "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
    $(lsb_release -cs) \
    stable" \
-   && apt-get update \
-   && apt-get install docker-ce docker-ce-cli containerd.io \
+   && apt-get -y update \
+   && apt-get -y install docker-ce docker-ce-cli containerd.io \
    && groupadd docker \
    && usermod -aG docker gitpod
