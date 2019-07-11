@@ -1,19 +1,5 @@
 FROM alpine as certs
 RUN apk add --no-cache ca-certificates
-ARG BUILD_DATE
-ARG VCS_REF
-ARG VERSION
-LABEL maintainer="Stefan Bratic" \
-      org.label-schema.build-date=$BUILD_DATE \
-      org.label-schema.name="restic-backup-docker" \
-      org.label-schema.description="Automatic restic backup using docker" \
-      org.label-schema.url="https://github.com/Cobrijani/restic-backup-docker" \
-      org.label-schema.vcs-ref=$VCS_REF \
-      org.label-schema.vcs-url="https://github.com/Cobrijani/restic-backup-docker.git" \
-      org.label-schema.vendor="Cobrijani" \
-      org.label-schema.version=$VERSION \
-      org.label-schema.schema-version="1.0"
-
 
 FROM busybox:glibc as base
 COPY --from=certs /etc/ssl/certs /etc/ssl/certs
