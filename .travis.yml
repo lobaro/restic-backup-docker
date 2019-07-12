@@ -1,7 +1,17 @@
-language: java
+dist: trusty
+sudo: required
 
 services:
   - docker
 
-script:
+install:
 - make build
+
+before_script:
+- make login
+
+after_success:
+- make deploy
+
+after_script:
+- make logout

@@ -1,4 +1,4 @@
-.PHONY: build login logout
+.PHONY: build login logout deploy
 
 # Project variables
 PROJECT_NAME ?= restic-backup-docker
@@ -12,7 +12,7 @@ VCS_REF := `git rev-parse --short HEAD`
 DOCKER_REGISTRY ?= docker.io
 DOCKER_REGISTRY_AUTH ?=
 
-build: 
+build:
 	${INFO} "Building docker images..."
 	@ docker build --no-cache -t $(ORG_NAME)/$(REPO_NAME) \
 				 --label maintainer="Stefan Bratic" \
@@ -48,8 +48,13 @@ login:
 logout:
 	${INFO} "Logging out of Docker registry $$DOCKER_REGISTRY..."
 	@ docker logout
-	${INFO} "Logged out of Docker registry $$DOCKER_REGISTRY"	
+	${INFO} "Logged out of Docker registry $$DOCKER_REGISTRY"
 
+
+deploy:
+    ${INFO} "Deploying images"
+
+    ${INFO} "Complete"
 
 # Repository Filter
 ifeq ($(DOCKER_REGISTRY), docker.io)
