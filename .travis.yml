@@ -8,10 +8,9 @@ install:
 
 before_script:
 - make test
-# - make login
 
-after_success:
-- make deploy
-
-# after_script:
-# - make logout
+deploy:
+  provider: script
+  script: make deploy
+  on:
+    branch: master
