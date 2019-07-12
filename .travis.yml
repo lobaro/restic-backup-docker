@@ -1,0 +1,7 @@
+language: java
+
+services:
+  - docker
+
+script:
+- make build
