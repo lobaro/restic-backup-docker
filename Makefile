@@ -3,11 +3,22 @@
 # Project variables
 PROJECT_NAME ?= restic-backup-docker
 ORG_NAME ?= cobrijani
-REPO_NAME ?= restic-backup-docker
+REPO_NAME ?= restic-backup
+
+# Schema variables
+SCHEMA_URL ?= "https://github.com/Cobrijani/restic-backup-docker"
+SCHEMA_VERSION = "1.0"
+SCHEMA_NAME = "restic-backup-docker"
+
+VCS_URL ?= "https://github.com/Cobrijani/restic-backup-docker.git"
+VENDOR ?= "Cobrijani"
+DESCRIPTION ?= "Automatic restic backup using docker"
 
 VERSION := `cat VERSION`
 BUILD_DATE := `date -u +"%Y-%m-%dT%H:%M:%SZ"`
 VCS_REF := `git rev-parse --short HEAD`
+
+MAINTAINER ?= "Stefan Bratic"
 
 DOCKER_REGISTRY ?= docker.io
 DOCKER_REGISTRY_AUTH ?=
@@ -15,36 +26,34 @@ DOCKER_REGISTRY_AUTH ?=
 build:
 	${INFO} "Building docker images..."
 	@ docker build --no-cache -t $(ORG_NAME)/$(REPO_NAME) \
-				 --label maintainer="Stefan Bratic" \
+				 --label maintainer=$(MAINTAINER) \
 				 --label org.label-schema.build-date=$(BUILD_DATE) \
-				 --label org.label-schema.name="restic-backup-docker" \
-				 --label org.label-schema.description="Automatic restic backup using docker" \
-				 --label org.label-schema.url="https://github.com/Cobrijani/restic-backup-docker" \
+				 --label org.label-schema.name=$(SCHEMA_NAME) \
+				 --label org.label-schema.description=$(DESCRIPTION) \
+				 --label org.label-schema.url=$(SCHEMA_URL) \
 				 --label org.label-schema.vcs-ref=$(VCS_REF) \
-				 --label org.label-schema.vcs-url="https://github.com/Cobrijani/restic-backup-docker.git" \
-				 --label org.label-schema.vendor="Cobrijani" \
+				 --label org.label-schema.vcs-url=$(VCS_URL) \
+				 --label org.label-schema.vendor=$(VENDOR) \
 				 --label org.label-schema.version=$(VERSION) \
-				 --label org.label-schema.schema-version="1.0" \
+				 --label org.label-schema.schema-version=$(SCHEMA_VERSION) \
 				  .
 	@ docker build --no-cache -t $(ORG_NAME)/$(REPO_NAME):rclone-latest \
-				 --label maintainer="Stefan Bratic" \
+				 --label maintainer=$(MAINTAINER) \
 				 --label org.label-schema.build-date=$(BUILD_DATE) \
-				 --label org.label-schema.name="restic-backup-docker" \
-				 --label org.label-schema.description="Automatic restic backup using docker" \
-				 --label org.label-schema.url="https://github.com/Cobrijani/restic-backup-docker" \
+				 --label org.label-schema.name=$(SCHEMA_NAME) \
+				 --label org.label-schema.description=$(DESCRIPTION) \
+				 --label org.label-schema.url=$(SCHEMA_URL) \
 				 --label org.label-schema.vcs-ref=$(VCS_REF) \
-				 --label org.label-schema.vcs-url="https://github.com/Cobrijani/restic-backup-docker.git" \
-				 --label org.label-schema.vendor="Cobrijani" \
+				 --label org.label-schema.vcs-url=$(VCS_URL) \
+				 --label org.label-schema.vendor=$(VENDOR) \
 				 --label org.label-schema.version=$(VERSION) \
-				 --label org.label-schema.schema-version="1.0" \
+				 --label org.label-schema.schema-version=$(SCHEMA_VERSION) \
 				  ./rclone
 	${INFO} "Building complete"
 
 login:
 	${INFO} "Logging in to Docker registry $$DOCKER_REGISTRY..."
-	@echo ${DOCKER_USER}
-	@echo $$DOCKER_USER
-	@ docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWORD} $(DOCKER_REGISTRY_AUTH)
+	@ docker login -u $$DOCKER_USER -p $$DOCKER_PASSWORD $(DOCKER_REGISTRY_AUTH)
 	${INFO} "Logged in to Docker registry $$DOCKER_REGISTRY"
 
 logout:
@@ -59,6 +68,8 @@ deploy:
 
 test:
 	${INFO} "Testing ..."
+	@ docker-compose -f docker-compose.test.yml up
+	@ docker-compose -f rclone/docker-compose.test.yml up
 	${INFO} "Test Complete!"
 
 
