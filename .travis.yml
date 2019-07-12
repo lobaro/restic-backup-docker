@@ -1,7 +1,25 @@
-language: java
+sudo: required
 
 services:
   - docker
 
+install:
+ - make build
+
+before_script:
+ - make test
+
 script:
-- make build
+ - make install
+
+before_deploy:
+ - make login
+
+deploy:
+  provider: script
+  script: make deploy
+  on:
+    branch: master
+
+after_deploy:
+ - make logout
