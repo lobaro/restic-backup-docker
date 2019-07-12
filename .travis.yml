@@ -9,6 +9,10 @@ install:
 before_script:
  - make test
 
+script:
+ - make install
+
+
 deploy:
   provider: script
   script: make deploy

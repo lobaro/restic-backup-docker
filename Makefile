@@ -1,4 +1,4 @@
-.PHONY: build login logout deploy test
+.PHONY: build login logout deploy test install
 
 # Project variables
 PROJECT_NAME ?= restic-backup-docker
@@ -72,6 +72,9 @@ test:
 	@ docker-compose -f rclone/docker-compose.test.yml up
 	${INFO} "Test Complete!"
 
+install:
+	${INFO} "Installing..."
+	${INFO} "Install complete"
 
 # Cosmetics
 YELLOW := "\e[1;33m"
