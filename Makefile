@@ -1,4 +1,4 @@
-.PHONY: build login logout deploy
+.PHONY: build login logout deploy test
 
 # Project variables
 PROJECT_NAME ?= restic-backup-docker
@@ -54,6 +54,10 @@ logout:
 deploy:
     ${INFO} "Deploying images"
     ${INFO} "Complete"
+
+test:
+    ${INFO} "Testing ..."
+    ${INFO} "Test Complete!"
 
 # Repository Filter
 ifeq ($(DOCKER_REGISTRY), docker.io)
