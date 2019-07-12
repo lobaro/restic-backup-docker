@@ -41,29 +41,30 @@ build:
 	${INFO} "Building complete"
 
 login:
-    ${INFO} "Logging in to Docker registry $$DOCKER_REGISTRY..."
-    @ docker login -u $$DOCKER_USER -p $$DOCKER_PASSWORD $(DOCKER_REGISTRY_AUTH)
-    ${INFO} "Logged in to Docker registry $$DOCKER_REGISTRY"
+	${INFO} "Logging in to Docker registry $$DOCKER_REGISTRY..."
+	@ docker login -u $$DOCKER_USER -p $$DOCKER_PASSWORD $(DOCKER_REGISTRY_AUTH)
+	${INFO} "Logged in to Docker registry $$DOCKER_REGISTRY"
 
 logout:
-    ${INFO} "Logging out of Docker registry $$DOCKER_REGISTRY..."
-    @ docker logout
-    ${INFO} "Logged out of Docker registry $$DOCKER_REGISTRY"
+	${INFO} "Logging out of Docker registry $$DOCKER_REGISTRY..."
+   	@ docker logout
+	${INFO} "Logged out of Docker registry $$DOCKER_REGISTRY"
 
 
 deploy:
-    ${INFO} "Deploying images"
-    ${INFO} "Complete"
+	${INFO} "Deploying images"
+	${INFO} "Complete"
 
 test:
-    ${INFO} "Testing ..."
+	${INFO} "Testing ..."
     ${INFO} "Test Complete!"
+
 
 # Repository Filter
 ifeq ($(DOCKER_REGISTRY), docker.io)
-    REPO_FILTER := $(ORG_NAME)/$(REPO_NAME)[^[:space:]|\$$]*
+	REPO_FILTER := $(ORG_NAME)/$(REPO_NAME)[^[:space:]|\$$]*
 else
-    REPO_FILTER := $(DOCKER_REGISTRY)/$(ORG_NAME)/$(REPO_NAME)[^[:space:]|\$$]*
+	REPO_FILTER := $(DOCKER_REGISTRY)/$(ORG_NAME)/$(REPO_NAME)[^[:space:]|\$$]*
 endif
 
 # Cosmetics
@@ -72,6 +73,6 @@ NC := "\e[0m"
 
 # Shell Functions
 INFO := @bash -c '\
-  printf $(YELLOW); \
-  echo "=> $$1"; \
-  printf $(NC)' SOME_VALUE
+	printf $(YELLOW); \
+	echo "=> $$1"; \
+	printf $(NC)' SOME_VALUE
