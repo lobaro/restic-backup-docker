@@ -73,13 +73,6 @@ test:
 	${INFO} "Test Complete!"
 
 
-# Repository Filter
-ifeq ($(DOCKER_REGISTRY), docker.io)
-	REPO_FILTER := $(ORG_NAME)/$(REPO_NAME)[^[:space:]|\$$]*
-else
-	REPO_FILTER := $(DOCKER_REGISTRY)/$(ORG_NAME)/$(REPO_NAME)[^[:space:]|\$$]*
-endif
-
 # Cosmetics
 YELLOW := "\e[1;33m"
 NC := "\e[0m"
