@@ -1,13 +1,13 @@
-language: java
+sudo: required
 
 services:
   - docker
 
 install:
-- make build
+ - make build
 
 before_script:
-- make test
+ - make test
 
 deploy:
   provider: script
