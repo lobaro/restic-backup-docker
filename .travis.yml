@@ -8,10 +8,10 @@ install:
 
 before_script:
 - make test
-- make login
+# - make login
 
 after_success:
 - make deploy
 
-after_script:
-- make logout
+# after_script:
+# - make logout
