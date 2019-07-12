@@ -3,9 +3,6 @@ language: java
 services:
   - docker
 
-before_install:
-- cat -e -t Makefile
-
 install:
 - make build
 
