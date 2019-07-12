@@ -12,9 +12,14 @@ before_script:
 script:
  - make install
 
+before_deploy:
+ - make login
 
 deploy:
   provider: script
   script: make deploy
   on:
     branch: master
+
+after_deploy:
+ - make logout

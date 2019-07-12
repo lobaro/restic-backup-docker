@@ -64,6 +64,10 @@ logout:
 
 deploy:
 	${INFO} "Deploying images"
+	@ docker push $(ORG_NAME)/$(REPO_NAME)
+	@ docker push $(ORG_NAME)/$(REPO_NAME):rclone-latest
+	@ docker push $(ORG_NAME)/$(REPO_NAME):$(VERSION).$(VCS_REF)
+	@ docker push $(ORG_NAME)/$(REPO_NAME):rclone-$(VERSION).$(VCS_REF)
 	${INFO} "Complete"
 
 test:
@@ -74,6 +78,8 @@ test:
 
 install:
 	${INFO} "Installing..."
+	@ docker tag $(ORG_NAME)/$(REPO_NAME) $(ORG_NAME)/$(REPO_NAME):$(VERSION).$(VCS_REF)
+	@ docker tag $(ORG_NAME)/$(REPO_NAME):rclone-latest $(ORG_NAME)/$(REPO_NAME):rclone-$(VERSION).$(VCS_REF)
 	${INFO} "Install complete"
 
 # Cosmetics
