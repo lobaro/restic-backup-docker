@@ -106,4 +106,4 @@ Build metadata is used to declare the Restic version.
 
 **Example:** 1.3.0+0.9.5 (includes Restic 0.9.5)
 
-For Changelog see: https://github.com/lobaro/restic-backup-docker/releases
+For changelog see: https://github.com/lobaro/restic-backup-docker/releases
