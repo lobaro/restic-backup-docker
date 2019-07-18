@@ -11,7 +11,7 @@ This container runs restic backups in regular intervals.
 
 Stable
 ```
-docker pull lobaro/restic-backup-docker:v1.2
+docker pull lobaro/restic-backup-docker:1.2-0.9.4
 ```
 
 Latest (experimental)
