@@ -1,4 +1,4 @@
-FROM alpine as certs
+FROM alpine:3.10.1 as build
 RUN apk add --no-cache ca-certificates
 
 # Get restic executable
@@ -6,10 +6,12 @@ ENV RESTIC_VERSION=0.9.5
 ADD https://github.com/restic/restic/releases/download/v${RESTIC_VERSION}/restic_${RESTIC_VERSION}_linux_amd64.bz2 /
 RUN bzip2 -d restic_${RESTIC_VERSION}_linux_amd64.bz2 && mv restic_${RESTIC_VERSION}_linux_amd64 /bin/restic && chmod +x /bin/restic
 
-FROM busybox:glibc
+FROM alpine:3.10.1
 
-COPY --from=certs /etc/ssl/certs /etc/ssl/certs
-COPY --from=certs /bin/restic /bin/restic
+COPY --from=build /etc/ssl/certs /etc/ssl/certs
+COPY --from=build /bin/restic /bin/restic
+
+RUN apk add --update --no-cache fuse openssh-client
 
 RUN \
     mkdir -p /mnt/restic /var/spool/cron/crontabs /var/log; \
