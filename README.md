@@ -98,16 +98,12 @@ Now you can simply specify the restic repository to be an [SFTP repository](http
 -e "RESTIC_REPOSITORY=sftp:user@host:/tmp/backup"
 ```
 
-# Changelog
+# Versioning & Changelog
 
-Versioning follows [Semantic versioning](http://semver.org/)
+Starting from v1.3.0 versioning follows [Semantic versioning](http://semver.org/)
 
-! Breaking changes
+Build metadata is used to declare the Restic version.
 
-**:latest**  
-* ! `--prune` must be passed to `RESTIC_FORGET_ARGS` to execute prune after forget.
-* Switch to base Docker container to `golang:1.7-alpine` to support latest restic build.
+**Example:** 1.3.0+0.9.5 (includes Restic 0.9.5)
 
-
-**:v1.0**
-* First stable version
+For Changelog see: https://github.com/lobaro/restic-backup-docker/releases
