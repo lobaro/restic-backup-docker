@@ -4,19 +4,19 @@ A docker container to automate [restic backups](https://restic.github.io/)
 This container runs restic backups in regular intervals. 
 
 * Easy setup and maintanance
-* Support for different targets (currently: Local, NFS, SFTP)
+* Support for different targets (tested with: Local, NFS, SFTP, AWS)
 * Support `restic mount` inside the container to browse the backup files
 
 **Container**: [lobaro/restic-backup-docker](https://hub.docker.com/r/lobaro/restic-backup-docker/)
 
 Stable
 ```
-docker pull lobaro/restic-backup-docker:v1.0
+docker pull lobaro/restic-backup-docker:1.2-0.9.4
 ```
 
 Latest (experimental)
 ```
-docker pull lobaro/restic-backup-docker
+docker pull lobaro/restic-backup-docker:latest
 ```
 
 Please don't hesitate to report any issue you find. **Thanks.**
@@ -50,7 +50,7 @@ To enter your container execute
 docker exec -ti backup-test /bin/sh
 ```
 
-Now you can use restic [as documented](https://restic.readthedocs.io/en/stable/Manual/), e.g. try to run `restic snapshots` to list all your snapshots.
+Now you can use restic [as documented](https://restic.readthedocs.io/en/stable/), e.g. try to run `restic snapshots` to list all your snapshots.
 
 ## Logfiles
 Logfiles are inside the container. If needed you can create volumes for them.
@@ -84,7 +84,7 @@ The container is setup by setting [environment variables](https://docs.docker.co
 
 ## Set the hostname
 
-Since restic saves the hostname with each snapshot and the hostname of a docker container is it's id you might want to customize this by setting the hostname of the container to another value.
+Since restic saves the hostname with each snapshot and the hostname of a docker container is derived from it's id you might want to customize this by setting the hostname of the container to another value.
 
 Either by setting the [environment variable](https://docs.docker.com/engine/reference/run/#env-environment-variables) `HOSTNAME` or with `--hostname` in the [network settings](https://docs.docker.com/engine/reference/run/#network-settings)
 
@@ -98,16 +98,12 @@ Now you can simply specify the restic repository to be an [SFTP repository](http
 -e "RESTIC_REPOSITORY=sftp:user@host:/tmp/backup"
 ```
 
-# Changelog
+# Versioning & Changelog
 
-Versioning follows [Semantic versioning](http://semver.org/)
+Starting from v1.3.0 versioning follows [Semantic versioning](http://semver.org/)
 
-! Breaking changes
+Build metadata is used to declare the Restic version.
 
-**:latest**  
-* ! `--prune` must be passed to `RESTIC_FORGET_ARGS` to execute prune after forget.
-* Switch to base Docker container to `golang:1.7-alpine` to support latest restic build.
+**Example:** 1.3.0+0.9.5 (includes Restic 0.9.5)
 
-
-**:v1.0**
-* First stable version
+For changelog see: https://github.com/lobaro/restic-backup-docker/releases
