@@ -11,7 +11,7 @@ FROM alpine:3.10.1
 COPY --from=build /etc/ssl/certs /etc/ssl/certs
 COPY --from=build /bin/restic /bin/restic
 
-RUN apk add --update --no-cache fuse openssh-client
+RUN apk add --update --no-cache fuse openssh-client heirloom-mailx
 
 RUN \
     mkdir -p /mnt/restic /var/spool/cron/crontabs /var/log; \
@@ -25,6 +25,7 @@ ENV \
     BACKUP_CRON="0 */6 * * *" \
     RESTIC_FORGET_ARGS="" \
     RESTIC_JOB_ARGS=""
+    MAILX_ARGS=""
 
 # /data is the dir where you have to put the data to be backed up
 VOLUME /data
