@@ -1,6 +1,7 @@
 #!/bin/sh
 
 lastLogfile="/var/log/backup-last.log"
+lastMailLogfile="/var/log/mail-last.log"
 
 copyErrorLog() {
   cp ${lastLogfile} /var/log/backup-error-last.log
@@ -11,7 +12,7 @@ logLast() {
 }
 
 start=`date +%s`
-rm -f ${lastLogfile}
+rm -f ${lastLogfile} ${lastMailLogfile}
 echo "Starting Backup at $(date +"%Y-%m-%d %H:%M:%S")"
 echo "Starting Backup at $(date)" >> ${lastLogfile}
 logLast "BACKUP_CRON: ${BACKUP_CRON}"
@@ -50,3 +51,12 @@ fi
 
 end=`date +%s`
 echo "Finished Backup at $(date +"%Y-%m-%d %H:%M:%S") after $((end-start)) seconds"
+
+if [ -n "${MAILX_ARGS}" ]; then
+    sh -c "mailx -v -S sendwait ${MAILX_ARGS} < ${lastLogfile} > ${lastMailLogfile} 2>&1"
+    if [ $? == 0 ]; then
+        echo "Mail notification successfully sent."
+    else
+        echo "Sending mail notification FAILED. Check ${lastMailLogfile} for further information."
+    fi
+fi
