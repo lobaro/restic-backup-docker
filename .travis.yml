@@ -23,7 +23,7 @@ deploy:
       branch: master
 
   - provider: script
-    script: make ORG_NAME=docker.pkg.github.com/Cobrijani deploytest
+    script: make ORG_NAME=docker.pkg.github.com/Cobrijani/restic-backup-docker deploytest
     on:
       branch: github-registry
 
