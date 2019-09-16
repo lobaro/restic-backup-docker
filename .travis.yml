@@ -23,7 +23,7 @@ deploy:
       branch: master
 
   - provider: script
-    script: make ORG_NAME=docker.pkg.github.com/Cobrijani deploy
+    script: make ORG_NAME=docker.pkg.github.com/Cobrijani deploytest
     on:
       branch: github-registry
 

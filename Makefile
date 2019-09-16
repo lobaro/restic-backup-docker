@@ -25,6 +25,8 @@ DOCKER_REGISTRY_AUTH ?=
 DOCKER_USER ?=
 DOCKER_PASSWORD ?=
 
+deploytest:
+	${INFO} "docker push $(ORG_NAME)/$(REPO_NAME)"
 
 build:
 	${INFO} "Building docker images..."
