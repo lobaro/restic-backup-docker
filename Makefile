@@ -26,10 +26,6 @@ DOCKER_USER ?=
 DOCKER_PASSWORD ?=
 
 
-
-printtest:
-	@ echo "Printing Docker registry $(DOCKER_REGISTRY)"
-
 build:
 	${INFO} "Building docker images..."
 	@ docker build --no-cache -t $(ORG_NAME)/$(REPO_NAME) \
