@@ -13,7 +13,8 @@ script:
  - make install
 
 before_deploy:
- - make login
+ - make DOCKER_USER=${DOCKER_USER} DOCKER_PASSWORD=${DOCKER_PASSWORD} login
+ - make DOCKER_USER=${DOCKER_GITHUB_USER} DOCKER_PASSWORD=${DOCKER_GITHUB_PASSWORD} DOCKER_REGISTRY_AUTH=docker.pkg.github.com login
 
 deploy:
   provider: script

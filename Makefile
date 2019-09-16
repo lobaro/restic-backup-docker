@@ -22,6 +22,13 @@ MAINTAINER ?= "Stefan Bratic"
 
 DOCKER_REGISTRY ?= docker.io
 DOCKER_REGISTRY_AUTH ?=
+DOCKER_USER ?=
+DOCKER_PASSWORD ?=
+
+
+
+printtest:
+	@ echo "Printing Docker registry $(DOCKER_REGISTRY)"
 
 build:
 	${INFO} "Building docker images..."
@@ -52,14 +59,15 @@ build:
 	${INFO} "Building complete"
 
 login:
-	${INFO} "Logging in to Docker registry $$DOCKER_REGISTRY..."
-	@ docker login -u $$DOCKER_USER -p $$DOCKER_PASSWORD $(DOCKER_REGISTRY_AUTH)
-	${INFO} "Logged in to Docker registry $$DOCKER_REGISTRY"
+	${INFO} "Logging in to Docker registry $(DOCKER_REGISTRY)..."
+	@ docker login -u $(DOCKER_USER) -p $(DOCKER_PASSWORD) $(DOCKER_REGISTRY_AUTH)
+	${INFO} "Logged in to Docker registry $(DOCKER_REGISTRY)"
+
 
 logout:
-	${INFO} "Logging out of Docker registry $$DOCKER_REGISTRY..."
-	@ docker logout
-	${INFO} "Logged out of Docker registry $$DOCKER_REGISTRY"
+	${INFO} "Logging out of Docker registry $(DOCKER_REGISTRY)..."
+	@ docker logout $(DOCKER_REGISTRY_AUTH)
+	${INFO} "Logged out of Docker registry $(DOCKER_REGISTRY)"
 
 
 deploy:
