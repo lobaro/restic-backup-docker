@@ -6,10 +6,17 @@ ENV RESTIC_VERSION=0.9.5
 ADD https://github.com/restic/restic/releases/download/v${RESTIC_VERSION}/restic_${RESTIC_VERSION}_linux_amd64.bz2 /
 RUN bzip2 -d restic_${RESTIC_VERSION}_linux_amd64.bz2 && mv restic_${RESTIC_VERSION}_linux_amd64 /bin/restic && chmod +x /bin/restic
 
+FROM alpine as rclone
+
+# Get rclone executable
+ADD https://downloads.rclone.org/rclone-current-linux-amd64.zip /
+RUN unzip rclone-current-linux-amd64.zip && mv rclone-*-linux-amd64/rclone /bin/rclone && chmod +x /bin/rclone
+
 FROM busybox:glibc
 
 COPY --from=certs /etc/ssl/certs /etc/ssl/certs
 COPY --from=certs /bin/restic /bin/restic
+COPY --from=rclone /bin/rclone /bin/rclone
 
 RUN \
     mkdir -p /mnt/restic /var/spool/cron/crontabs /var/log; \

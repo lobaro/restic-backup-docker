@@ -88,7 +88,7 @@ Since restic saves the hostname with each snapshot and the hostname of a docker 
 
 Either by setting the [environment variable](https://docs.docker.com/engine/reference/run/#env-environment-variables) `HOSTNAME` or with `--hostname` in the [network settings](https://docs.docker.com/engine/reference/run/#network-settings)
 
-## Backup to SFTP
+## Backup via SFTP
 
 Since restic needs a **password less login** to the SFTP server make sure you can do `sftp user@host` from inside the container. If you can do so from your host system, the easiest way is to just mount your `.ssh` folder conaining the authorized cert into the container by specifying `-v ~/.ssh:/root/.ssh` as argument for `docker run`.
 
@@ -97,6 +97,10 @@ Now you can simply specify the restic repository to be an [SFTP repository](http
 ```
 -e "RESTIC_REPOSITORY=sftp:user@host:/tmp/backup"
 ```
+
+## Backup via rclone
+
+To use rclone as a backend for restic, simply add the rclone config file as a volume with `-v /absolute/path/to/rclone.conf:/root/.config/rclone/rclone.conf`.
 
 # Versioning & Changelog
 
