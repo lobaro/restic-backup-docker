@@ -14,7 +14,7 @@ if [ -n "${NFS_TARGET}" ]; then
 fi
 
 if grep -q 'sftp:' $RESTIC_REPOSITORY; then
-        host_regex='^sftp:[^\s]+@([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+):(.+)$'
+        host_regex='^sftp:[^\s]+@(.+):(.+)$'
         [[ $RESTIC_REPOSITORY =~ $host_regex ]]
 
         # Test whether the path exists on the remote repository. If not then create it.
