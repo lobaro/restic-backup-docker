@@ -90,7 +90,7 @@ Either by setting the [environment variable](https://docs.docker.com/engine/refe
 
 ## Backup via SFTP
 
-Since restic needs a **password less login** to the SFTP server make sure you can do `sftp user@host` from inside the container. If you can do so from your host system, the easiest way is to just mount your `.ssh` folder conaining the authorized cert into the container by specifying `-v ~/.ssh:/root/.ssh` as argument for `docker run`.
+Since restic needs a **password less login** to the SFTP server make sure you can do `sftp user@host` from inside the container. If you can do so from your host system, the easiest way is to just mount your `.ssh` folder containing the authorized cert into the container by specifying `-v ~/.ssh:/root/.ssh` as argument for `docker run`.
 
 Now you can simply specify the restic repository to be an [SFTP repository](https://restic.readthedocs.io/en/stable/Manual/#create-an-sftp-repository).
 
