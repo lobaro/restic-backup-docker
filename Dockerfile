@@ -1,4 +1,4 @@
-FROM alpine as rclone
+FROM alpine:latest as rclone
 
 # Get rclone executable
 ADD https://downloads.rclone.org/rclone-current-linux-amd64.zip /
@@ -8,6 +8,8 @@ FROM restic/restic:latest
 
 # install mailx
 RUN apk add --update --no-cache heirloom-mailx
+
+COPY --from=rclone /bin/rclone /bin/rclone
 
 RUN \
     mkdir -p /mnt/restic /var/spool/cron/crontabs /var/log; \
