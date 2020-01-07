@@ -87,7 +87,7 @@ The container is setup by setting [environment variables](https://docs.docker.co
 
 Since restic saves the hostname with each snapshot and the hostname of a docker container is derived from it's id you might want to customize this by setting the hostname of the container to another value.
 
-Either by setting the [environment variable](https://docs.docker.com/engine/reference/run/#env-environment-variables) `HOSTNAME` or with `--hostname` in the [network settings](https://docs.docker.com/engine/reference/run/#network-settings)
+Set `--hostname` in the [network settings](https://docs.docker.com/engine/reference/run/#network-settings)
 
 ## Backup via SFTP
 
