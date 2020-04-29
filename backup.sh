@@ -11,6 +11,13 @@ logLast() {
   echo "$1" >> ${lastLogfile}
 }
 
+if [ -f "/hooks/pre-backup.sh" ]; then
+    echo "Starting pre-backup script ..."
+    /hooks/pre-backup.sh
+else
+    echo "Pre-backup script not found ..."
+fi
+
 start=`date +%s`
 rm -f ${lastLogfile} ${lastMailLogfile}
 echo "Starting Backup at $(date +"%Y-%m-%d %H:%M:%S")"
@@ -59,4 +66,11 @@ if [ -n "${MAILX_ARGS}" ]; then
     else
         echo "Sending mail notification FAILED. Check ${lastMailLogfile} for further information."
     fi
+fi
+
+if [ -f "/hooks/post-backup.sh" ]; then
+    echo "Starting post-backup script ..."
+    /hooks/post-backup.sh
+else
+    echo "Post-backup script not found ..."
 fi
