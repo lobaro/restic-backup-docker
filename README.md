@@ -19,6 +19,15 @@ Latest (experimental)
 docker pull lobaro/restic-backup-docker:latest
 ```
 
+## Hooks
+
+If you need to execute a script before or after each backup, 
+you need to add your hook script in the container folder `/hooks`:
+```
+-v ~/home/user/hooks:/hooks
+```
+Call your pre backup script `pre-backup.sh` and post backup script `post-backup.sh`
+
 Please don't hesitate to report any issue you find. **Thanks.**
 
 # Test the container
