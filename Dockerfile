@@ -24,6 +24,14 @@ ENV RESTIC_FORGET_ARGS=""
 ENV RESTIC_JOB_ARGS=""
 ENV MAILX_ARGS=""
 
+# openshift fix
+RUN chgrp -R 0 /mnt && \
+    chmod -R g=u /mnt && \
+    chgrp -R 0 /var/spool/cron/crontabs/root && \
+    chmod -R g=u /var/spool/cron/crontabs/root && \
+    chgrp -R 0 /var/log/cron.log && \
+    chmod -R g=u /var/log/cron.log
+
 # /data is the dir where you have to put the data to be backed up
 VOLUME /data
 
