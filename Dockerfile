@@ -25,7 +25,10 @@ ENV RESTIC_JOB_ARGS=""
 ENV MAILX_ARGS=""
 
 # openshift fix
-RUN chgrp -R 0 /mnt && \
+RUN mkdir /.cache && \
+    chgrp -R 0 /.cache && \
+    chmod -R g=u /.cache && \
+    chgrp -R 0 /mnt && \
     chmod -R g=u /mnt && \
     chgrp -R 0 /var/spool/cron/crontabs/root && \
     chmod -R g=u /var/spool/cron/crontabs/root && \
