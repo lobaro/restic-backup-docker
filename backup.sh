@@ -52,6 +52,11 @@ fi
 end=`date +%s`
 echo "Finished Backup at $(date +"%Y-%m-%d %H:%M:%S") after $((end-start)) seconds"
 
+if [ -n "$POST_BACKUP_SCRIPT" -a -f "$POST_BACKUP_SCRIPT" ]; then
+    echo "Starting ${POST_BACKUP_SCRIPT}"
+    "$POST_BACKUP_SCRIPT" >> ${lastLogfile} 2>&1
+fi
+
 if [ -n "${MAILX_ARGS}" ]; then
     sh -c "mailx -v -S sendwait ${MAILX_ARGS} < ${lastLogfile} > ${lastMailLogfile} 2>&1"
     if [ $? == 0 ]; then
