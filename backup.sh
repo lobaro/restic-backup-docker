@@ -39,7 +39,7 @@ else
     echo "Backup Failed with Status ${rc}"
     restic unlock
     copyErrorLog
-    kill 1
+    exit 1
 fi
 
 if [ -n "${RESTIC_FORGET_ARGS}" ]; then
