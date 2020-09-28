@@ -71,6 +71,39 @@ Shows `/var/log/cron.log`
 
 Additionally you can see the the full log, including restic output, of the last execution in `/var/log/backup-last.log`. When the backup fails the log is copied to `/var/log/restic-error-last.log`. If configured, you can find the full output of the mail notification in `/var/log/mail-last.log`.
 
+# Use the running container
+
+Assuming the container name is `restic-backup-var`
+
+You can execute restic with ` docker exec -ti restic-backup-var restic`
+
+## Backup
+
+To execute a backup manually independent of the CRON run:
+
+    docker exec -ti restic-backup-var /bin/backup
+    
+    
+Backup a single file or directory
+
+    docker exec -ti restic-backup-var restic backup /data/path/to/dir --tag my-tag
+
+## Restore
+
+You might want to mount a separate hostvolume at e.g. `/restore` to not override existing data while restoring. 
+
+Get your snapshot ID with
+
+    docker exec -ti restic-backup-var restic snapshots
+    
+e.g. `abcdef12`
+
+     docker exec -ti restic-backup-var restic restore --include /data/path/to/files --target / abcdef12
+
+The target is `/` since all data backed up should be inside the host mounted `/data` dir. If you mount `/restore` you should set `--target /restore` and data will end up in `/restore/data/path/to/files`.
+
+
+
 # Customize the Container
 
 The container is setup by setting [environment variables](https://docs.docker.com/engine/reference/run/#/env-environment-variables) and [volumes](https://docs.docker.com/engine/reference/run/#volume-shared-filesystems).
