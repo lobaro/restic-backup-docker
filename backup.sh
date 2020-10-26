@@ -69,7 +69,7 @@ fi
 
 if [ -f "/hooks/post-backup.sh" ]; then
     echo "Starting post-backup script ..."
-    /hooks/post-backup.sh
+    /hooks/post-backup.sh $backupRC
 else
     echo "Post-backup script not found ..."
 fi
