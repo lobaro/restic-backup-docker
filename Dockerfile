@@ -4,7 +4,7 @@ FROM alpine:latest as rclone
 ADD https://downloads.rclone.org/rclone-current-linux-amd64.zip /
 RUN unzip rclone-current-linux-amd64.zip && mv rclone-*-linux-amd64/rclone /bin/rclone && chmod +x /bin/rclone
 
-FROM restic/restic:0.9.6
+FROM restic/restic:0.11.0
 
 # install mailx
 RUN apk add --update --no-cache heirloom-mailx fuse
