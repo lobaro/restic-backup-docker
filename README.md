@@ -175,6 +175,10 @@ Now you can simply specify the restic repository to be an [Swift repository](htt
 
 To use rclone as a backend for restic, simply add the rclone config file as a volume with `-v /absolute/path/to/rclone.conf:/root/.config/rclone/rclone.conf`.
 
+Note that for some backends (Among them Google Drive and Microsoft OneDrive), rclone writes data back to the `rclone.conf` file. In this case it needs to be writable by Docker.
+
+If the the container fails to write the new `rclone.conf` file with the error message `Failed to save config after 10 tries: Failed to move previous config to backup location`, add the entire `rclone` directory as volume: `-v /absolute/path/to/rclone-dir:/root/.config/rclone`.
+ 
 # Versioning & Changelog
 
 Starting from v1.3.0 versioning follows [Semantic versioning](http://semver.org/)
