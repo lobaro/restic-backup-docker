@@ -35,7 +35,7 @@ restic backup /data ${RESTIC_JOB_ARGS} --tag=${RESTIC_TAG?"Missing environment v
 backupRC=$?
 logLast "Finished backup at $(date)"
 if [[ $backupRC == 0 ]]; then
-    echo "Backup Successfull"
+    echo "Backup Successful"
 else
     echo "Backup Failed with Status ${backupRC}"
     restic unlock
@@ -48,7 +48,7 @@ if [[ $backupRC == 0 ]] && [ -n "${RESTIC_FORGET_ARGS}" ]; then
     rc=$?
     logLast "Finished forget at $(date)"
     if [[ $rc == 0 ]]; then
-        echo "Forget Successfull"
+        echo "Forget Successful"
     else
         echo "Forget Failed with Status ${rc}"
         restic unlock
