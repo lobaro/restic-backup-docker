@@ -7,13 +7,13 @@ if [ -n "${NFS_TARGET}" ]; then
     mount -o nolock -v ${NFS_TARGET} /mnt/restic
 fi
 
-restic snapshots &>/dev/null
+restic snapshots ${RESTIC_INIT_ARGS} &>/dev/null
 status=$?
 echo "Check Repo status $status"
 
 if [ $status != 0 ]; then
     echo "Restic repository '${RESTIC_REPOSITORY}' does not exists. Running restic init."
-    restic init
+    restic init ${RESTIC_INIT_ARGS}
 
     init_status=$?
     echo "Repo init status $init_status"
