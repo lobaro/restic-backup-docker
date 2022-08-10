@@ -4,7 +4,7 @@ FROM alpine:latest as rclone
 ADD https://downloads.rclone.org/rclone-current-linux-amd64.zip /
 RUN unzip rclone-current-linux-amd64.zip && mv rclone-*-linux-amd64/rclone /bin/rclone && chmod +x /bin/rclone
 
-FROM restic/restic:0.12.0
+FROM restic/restic:0.13.1
 
 RUN apk add --update --no-cache heirloom-mailx fuse curl
 
@@ -19,9 +19,11 @@ ENV RESTIC_PASSWORD=""
 ENV RESTIC_TAG=""
 ENV NFS_TARGET=""
 ENV BACKUP_CRON="0 */6 * * *"
+ENV CHECK_CRON=""
 ENV RESTIC_INIT_ARGS=""
 ENV RESTIC_FORGET_ARGS=""
 ENV RESTIC_JOB_ARGS=""
+ENV RESTIC_DATA_SUBSET=""
 ENV MAILX_ARGS=""
 ENV OS_AUTH_URL=""
 ENV OS_PROJECT_ID=""
@@ -49,6 +51,7 @@ RUN mkdir /.cache && \
 VOLUME /data
 
 COPY backup.sh /bin/backup
+COPY check.sh /bin/check
 COPY entry.sh /entry.sh
 
 
