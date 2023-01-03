@@ -19,9 +19,11 @@ ENV RESTIC_PASSWORD=""
 ENV RESTIC_TAG=""
 ENV NFS_TARGET=""
 ENV BACKUP_CRON="0 */6 * * *"
+ENV CHECK_CRON=""
 ENV RESTIC_INIT_ARGS=""
 ENV RESTIC_FORGET_ARGS=""
 ENV RESTIC_JOB_ARGS=""
+ENV RESTIC_DATA_SUBSET=""
 ENV MAILX_ARGS=""
 ENV OS_AUTH_URL=""
 ENV OS_PROJECT_ID=""
@@ -49,6 +51,7 @@ RUN mkdir /.cache && \
 VOLUME /data
 
 COPY backup.sh /bin/backup
+COPY check.sh /bin/check
 COPY entry.sh /entry.sh
 
 
