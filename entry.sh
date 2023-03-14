@@ -43,4 +43,8 @@ crond
 
 echo "Container started."
 
+if [ -n "${RUN_IMMEDIATELY}" ]; then
+    /bin/backup
+fi
+
 exec "$@"
