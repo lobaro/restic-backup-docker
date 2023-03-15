@@ -29,6 +29,7 @@ logLast "RESTIC_FORGET_ARGS: ${RESTIC_FORGET_ARGS}"
 logLast "RESTIC_JOB_ARGS: ${RESTIC_JOB_ARGS}"
 logLast "RESTIC_REPOSITORY: ${RESTIC_REPOSITORY}"
 logLast "AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}"
+logLast "B2_ACCOUNT_ID: ${B2_ACCOUNT_ID}"
 
 # Do not save full backup log to logfile but to backup-last.log
 restic backup /data ${RESTIC_JOB_ARGS} --tag=${RESTIC_TAG?"Missing environment variable RESTIC_TAG"} >> ${lastLogfile} 2>&1

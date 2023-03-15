@@ -27,6 +27,7 @@ logLast "CHECK_CRON: ${CHECK_CRON}"
 logLast "RESTIC_DATA_SUBSET: ${RESTIC_DATA_SUBSET}"
 logLast "RESTIC_REPOSITORY: ${RESTIC_REPOSITORY}"
 logLast "AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}"
+logLast "B2_ACCOUNT_ID: ${B2_ACCOUNT_ID}"
 
 # Do not save full check log to logfile but to check-last.log
 if [ -n "${RESTIC_DATA_SUBSET}" ]; then
