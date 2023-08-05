@@ -1,6 +1,19 @@
 # Changelog
 
-## 1.3.1-0.9.6
+## Unreleased
+
+## v1.3.2+restic-0-16-0
+
+### Changed
+* Base image directly on official restic image
+* [Semver](https://semver.org/) aligned version nameing inclunding restic version
+
+### Added
+* rclone to docker image
+* Implemented a simple mail notification after backups using mailx
+* MAILX_ARGS environment variable
+
+## v1.3.1-0.9.6
 
 ### Changed
 * Update to Restic v0.9.5
@@ -14,12 +27,12 @@
 * fuse added to container
 * support to send mails using external SMTP server after backups
 
-## 1.2-0.9.4
+## v1.2-0.9.4
 
 ### Added
 * AWS Support
 
-## 1.1
+## v1.1
 
 ### Fixed
 * `--prune` must be passed to `RESTIC_FORGET_ARGS` to execute prune after forget.
@@ -27,7 +40,7 @@
 ### Changed
 * Switch to base Docker container to `golang:1.7-alpine` to support latest restic build.
 
-## 1.0
+## v1.0
 
 Initial release.
 
