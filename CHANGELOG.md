@@ -2,11 +2,12 @@
 
 ## Unreleased
 
-## v1.3.2+restic-0-16-0
+## v1.3.2 (restic 0.16.0)
 
 ### Changed
 * Base image directly on official restic image
 * [Semver](https://semver.org/) aligned version naming including restic version
+* Updated to restic 0.16.0
 
 ### Added
 * rclone to docker image
