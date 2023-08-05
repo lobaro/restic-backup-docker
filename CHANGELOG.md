@@ -6,7 +6,7 @@
 
 ### Changed
 * Base image directly on official restic image
-* [Semver](https://semver.org/) aligned version nameing inclunding restic version
+* [Semver](https://semver.org/) aligned version naming including restic version
 
 ### Added
 * rclone to docker image
