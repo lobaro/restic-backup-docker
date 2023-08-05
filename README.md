@@ -11,15 +11,16 @@ This container runs restic backups in regular intervals.
 * [ghcr.io/lobaro/restic-backup-docker](https://github.com/lobaro/restic-backup-docker/pkgs/container/restic-backup-docker)
 * Old: [lobaro/restic-backup-docker](https://hub.docker.com/r/lobaro/restic-backup-docker/)
 
-Stable
+Latest (experimental):
 ```
-docker pull lobaro/restic-backup-docker:1.2-0.9.4
+docker pull ghcr.io/lobaro/restic-backup-docker:master
 ```
 
-Latest (experimental)
-```
-docker pull lobaro/restic-backup-docker:latest
-```
+# Contributing
+Pull Requests to improve the image are always wellcome. Please create an issue about the PR first.
+
+When behaviour of the image changes (Features, Bugfixes, Changes in the API) please update the "Unreleased" section of the [CHANGELOG.md](https://github.com/lobaro/restic-backup-docker/blob/master/CHANGELOG.md)
+
 
 ## Hooks
 
@@ -213,13 +214,12 @@ services:
       - RESTIC_DATA_SUBSET=50G                             # Download 50G of data from "storageserver" every Wednesday 22:00 UTC and check the data integrity
       - RESTIC_FORGET_ARGS=--prune --keep-last 12          # Only keep the last 12 snapshots
 ```
- 
-# Versioning & Changelog
+
+# Versioning
 
 Starting from v1.3.0 versioning follows [Semantic versioning](http://semver.org/)
 
 Build metadata is used to declare the Restic version.
 
-**Example:** 1.3.0+0.9.5 (includes Restic 0.9.5)
+**Example:** v1.3.2+restic-0-16-0 (includes Restic 0.16.0)
 
-For changelog see: https://github.com/lobaro/restic-backup-docker/releases
