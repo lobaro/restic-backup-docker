@@ -11,9 +11,14 @@ This container runs restic backups in regular intervals.
 * [ghcr.io/lobaro/restic-backup-docker](https://github.com/lobaro/restic-backup-docker/pkgs/container/restic-backup-docker)
 * Old: [lobaro/restic-backup-docker](https://hub.docker.com/r/lobaro/restic-backup-docker/)
 
-Latest (experimental):
+Latest master (experimental):
 ```
 docker pull ghcr.io/lobaro/restic-backup-docker:master
+```
+
+Latest release:
+```
+docker pull ghcr.io/lobaro/restic-backup-docker:latest
 ```
 
 # Contributing
