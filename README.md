@@ -216,10 +216,5 @@ services:
 ```
 
 # Versioning
-
 Starting from v1.3.0 versioning follows [Semantic versioning](http://semver.org/)
-
-Build metadata is used to declare the Restic version.
-
-**Example:** v1.3.2+restic-0-16-0 (includes Restic 0.16.0)
 
