@@ -6,7 +6,7 @@ RUN unzip rclone-current-linux-amd64.zip && mv rclone-*-linux-amd64/rclone /bin/
 
 FROM restic/restic:0.16.0
 
-RUN apk add --update --no-cache heirloom-mailx fuse curl
+RUN apk add --update --no-cache curl mailx
 
 COPY --from=rclone /bin/rclone /bin/rclone
 
@@ -53,9 +53,6 @@ VOLUME /data
 COPY backup.sh /bin/backup
 COPY check.sh /bin/check
 COPY entry.sh /entry.sh
-
-
-WORKDIR "/"
 
 ENTRYPOINT ["/entry.sh"]
 CMD ["tail","-fn0","/var/log/cron.log"]
