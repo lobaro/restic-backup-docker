@@ -1,0 +1,18 @@
+# Set default values for all following accounts.
+defaults
+auth           on
+tls            on
+tls_trust_file /etc/ssl/certs/ca-certificates.crt
+syslog         on
+
+# Gmail
+account        gmail
+host           smtp.gmail.com
+port           587
+from           from@gmail.com
+user           user@gmail.com
+password       XXXXXXXXXXXXXXXXXXXXX 
+
+# Set a default account
+account default : gmail
+aliases        /etc/aliases

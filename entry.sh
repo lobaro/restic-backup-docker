@@ -35,6 +35,16 @@ if [ -n "${CHECK_CRON}" ]; then
     echo "${CHECK_CRON} /usr/bin/flock -n /var/run/backup.lock /bin/check >> /var/log/cron.log 2>&1" >> /var/spool/cron/crontabs/root
 fi
 
+# Copy msmtp config file from volume to /etc/msmtprc if exists and chown
+# ATTENTION: E-mail notification will only work if this files exists
+if [ -f /config/msmtprc ]; then
+    echo "Found msmtp config file in /config/msmtprc"
+    cp /config/msmtprc /etc/msmtprc
+    chmod 600 /etc/msmtprc
+else
+    echo "No msmtp config file found in /config/msmtprc"
+fi
+
 # Make sure the file exists before we start tail
 touch /var/log/cron.log
 
