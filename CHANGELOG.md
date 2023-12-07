@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+### Added
+* Option to set the target folder backup
+
 ## v1.3.2 (restic 0.16.0)
 
 ### Changed
