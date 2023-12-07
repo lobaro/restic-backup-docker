@@ -5,11 +5,11 @@ RUN apk add wget
 
 # Get rclone executable
 RUN if [ "$TARGETPLATFORM" = "linux/amd64" ]; then \
-        wget https://downloads.rclone.org/rclone-current-linux-amd64.zip && unzip rclone-current-linux-amd64.zip && mv rclone-*-linux-*/rclone /bin/rclone && chmod +x /bin/rclone; \
+        wget https://downloads.rclone.org/rclone-current-linux-amd64.zip && unzip rclone-current-linux-amd64.zip && mv rclone-*-linux-amd64/rclone /bin/rclone && chmod +x /bin/rclone; \
     elif [ "$TARGETPLATFORM" = "linux/arm64" ]; then \
-        wget https://downloads.rclone.org/rclone-current-linux-arm64.zip && unzip rclone-current-linux-arm64.zip && mv rclone-*-linux-*/rclone /bin/rclone && chmod +x /bin/rclone; \
+        wget https://downloads.rclone.org/rclone-current-linux-arm64.zip && unzip rclone-current-linux-arm64.zip && mv rclone-*-linux-arm64/rclone /bin/rclone && chmod +x /bin/rclone; \
     elif [ "$TARGETPLATFORM" = "linux/arm/v7" ]; then \
-        wget https://downloads.rclone.org/rclone-current-linux-arm-v7.zip && unzip rclone-current-linux-arm-v7.zip && mv rclone-*-linux-*/rclone /bin/rclone && chmod +x /bin/rclone; \
+        wget https://downloads.rclone.org/rclone-current-linux-arm-v7.zip && unzip rclone-current-linux-arm-v7.zip && mv rclone-*-linux-arm-v7/rclone /bin/rclone && chmod +x /bin/rclone; \
     fi
 
 
