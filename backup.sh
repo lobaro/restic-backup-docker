@@ -71,8 +71,8 @@ if [ -n "${TEAMS_WEBHOOK_URL}" ]; then
     fi
 fi
 
-if [ -n "${MAILX_ARGS}" ]; then
-    sh -c "mail -v -S sendwait ${MAILX_ARGS} < ${lastLogfile} > ${lastMailLogfile} 2>&1"
+if [ -n "${MAILX_ARGS}" ] && [ -f /config/msmtprc ]; then
+    sh -c "mail -v ${MAILX_ARGS} < ${lastLogfile} > ${lastMailLogfile} 2>&1"
     if [ $? == 0 ]; then
         echo "Mail notification successfully sent."
     else

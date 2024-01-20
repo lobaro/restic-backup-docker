@@ -131,7 +131,7 @@ The container is set up by setting [environment variables](https://docs.docker.c
 * `AWS_ACCESS_KEY_ID` - Optional. When using restic with AWS S3 storage.
 * `AWS_SECRET_ACCESS_KEY` - Optional. When using restic with AWS S3 storage.
 * `TEAMS_WEBHOOK_URL` - Optional. If specified, the content of `/var/log/backup-last.log` and `/var/log/check-last.log` is sent to your Microsoft Teams channel after each backup and data integrity check.
-* `MAILX_ARGS` - Optional. If specified, the content of `/var/log/backup-last.log` and `/var/log/check-last.log` is sent via mail after each backup and data integrity check using an *external SMTP*. To have maximum flexibility, you have to specify the mail/smtp parameters on your own. Have a look at the [mailx manpage](https://linux.die.net/man/1/mailx) for further information. Example value: `-e "MAILX_ARGS=-r 'from@example.de' -s 'Result of the last restic run' -S smtp='smtp.example.com:587' -S smtp-use-starttls -S smtp-auth=login -S smtp-auth-user='username' -S smtp-auth-password='password' 'to@example.com'"`.
+* `MAILX_ARGS` - Optional. If specified, the content of `/var/log/backup-last.log` and `/var/log/check-last.log` is sent via mail after each backup and data integrity check using an *external SMTP*. To have maximum flexibility, you have to specify the mail/smtp parameters on your own. Have a look at the [mailx manpage](https://linux.die.net/man/1/mailx) for further information. Example value: `-e "MAILX_ARGS=-r 'from@example.de' -s 'Result of the last restic run' 'to@example.com'"`. ***ATTENTION: A [msmtp](https://wiki.alpinelinux.org/wiki/Relay_email_to_gmail_(msmtp,_mailx,_sendmail)) config file must be provided (by mounting `/config/msmtprc`) for the mail sending to work using an external SMTP server/relay***
 * `OS_AUTH_URL` - Optional. When using restic with OpenStack Swift container.
 * `OS_PROJECT_ID` - Optional. When using restic with OpenStack Swift container.
 * `OS_PROJECT_NAME` - Optional. When using restic with OpenStack Swift container.
@@ -146,6 +146,7 @@ The container is set up by setting [environment variables](https://docs.docker.c
 ## Volumes
 
 * `/data` - This is the data that gets backed up. Just [mount](https://docs.docker.com/engine/reference/run/#volume-shared-filesystems) it to wherever you want.
+* `/config/msmtprc` - Optional. If specified, the file is copied to `/etc/msmtprc` and used for sending mails via an external SMTP server/relay. ***ATTENTION: The file must be provided for the mail sending to work using an external SMTP server/relay***
 
 ## Set the hostname
 
@@ -211,6 +212,7 @@ services:
       - ./post-backup.sh:/hooks/post-backup.sh:ro     # Run script post-backup.sh after every backup
       - ./post-check.sh:/hooks/post-check.sh:ro       # Run script post-check.sh after every check
       - ./ssh:/root/.ssh                              # SSH keys and config so we can login to "storageserver" without password
+      - ./msmtprc:/config/msmtprc:ro                  # Mail config for sending mails via an external SMTP server/relay
     environment:
       - RESTIC_REPOSITORY=sftp:storageserver:/storage/nas  # Backup to server "storageserver" 
       - RESTIC_PASSWORD=passwordForRestic                  # Password restic uses for encryption
@@ -218,6 +220,7 @@ services:
       - CHECK_CRON=0 22 * * 3                              # Start check every Wednesday 22:00 UTC
       - RESTIC_DATA_SUBSET=50G                             # Download 50G of data from "storageserver" every Wednesday 22:00 UTC and check the data integrity
       - RESTIC_FORGET_ARGS=--prune --keep-last 12          # Only keep the last 12 snapshots
+      - MAILX_ARGS=-r 'from@example.de' -s 'Result of the last restic run' 'to@example.com'
 ```
 
 # Versioning

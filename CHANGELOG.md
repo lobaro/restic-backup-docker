@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changed
+* BREAKING: Added `msmtp` package to be used to send mail via SMTP, since Alpine's `mail` no longer supports
+  providing external server configurations via `-S` parameters.
+
 ## v1.3.2 (restic 0.16.0)
 
 ### Changed
