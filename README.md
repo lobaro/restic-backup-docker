@@ -201,7 +201,7 @@ version: '3'
 
 services:
   restic:
-    image: lobaro/restic-backup-docker:latest
+    image: ghcr.io/lobaro/restic-backup-docker:latest
     hostname: nas                                     # This will be visible in restic snapshot list
     restart: always
     privileged: true
