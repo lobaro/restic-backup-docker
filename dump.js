@@ -197,54 +197,76 @@ async function backupMysqlAllDatabase() {
 
     await connection.connect();
     
-    // 获取所有表名
+    // 修改获取表名的查询，排除系统表
     const [tables] = await connection.query(`
       SELECT TABLE_NAME 
       FROM INFORMATION_SCHEMA.TABLES 
       WHERE TABLE_SCHEMA = ? 
-      AND TABLE_NAME NOT LIKE 'sys_%'
-      AND TABLE_NAME NOT LIKE 'performance_%'
-      AND TABLE_NAME NOT LIKE 'innodb_%'
+      AND TABLE_TYPE = 'BASE TABLE'
     `, [config.database]);
 
     const timestamp = moment().format('YYYYMMDDHHmmss');
-    const backupFile = path.join(backupDir, `mysql-backup-${timestamp}.sql`);
+    // const backupFile = path.join(backupDir, `mysql-backup-${timestamp}.sql`);
+    const backupFile = path.join(backupDir, `mysql-backup.sql`);
     const writeStream = fs.createWriteStream(backupFile);
     
     // 写入文件头部信息
-    writeStream.write(`-- MySQL dump\n`);
+    writeStream.write(`-- MySQL dump for database ${config.database}\n`);
     writeStream.write(`-- Created at: ${moment().format('YYYY-MM-DD HH:mm:ss')}\n\n`);
+    writeStream.write(`SET NAMES utf8mb4;\n`);
     writeStream.write(`SET FOREIGN_KEY_CHECKS=0;\n\n`);
 
     // 为每个表创建备份
     for (const table of tables) {
       const tableName = table.TABLE_NAME;
       
-      // 获取表结构
-      const [tableStructure] = await connection.query(`SHOW CREATE TABLE \`${tableName}\``);
-      writeStream.write(`-- Table structure: ${tableName}\n`);
+      // 获取建表语句
+      const [createTable] = await connection.query(`SHOW CREATE TABLE \`${tableName}\``);
+      const createTableSql = createTable[0]['Create Table'];
+      
+      writeStream.write(`--\n-- Table structure for \`${tableName}\`\n--\n\n`);
       writeStream.write(`DROP TABLE IF EXISTS \`${tableName}\`;\n`);
-      writeStream.write(`${tableStructure[0]['Create Table']};\n\n`);
+      writeStream.write(`${createTableSql};\n\n`);
 
       // 获取表数据
       const [rows] = await connection.query(`SELECT * FROM \`${tableName}\``);
       
       if (rows.length > 0) {
-        writeStream.write(`-- Table data: ${tableName}\n`);
-        const columns = Object.keys(rows[0]);
+        writeStream.write(`--\n-- Dumping data for table \`${tableName}\`\n--\n\n`);
         
-        for (const row of rows) {
-          const values = columns.map(column => {
-            const value = row[column];
-            if (value === null) return 'NULL';
-            if (typeof value === 'number') return value;
-            return `'${value.toString().replace(/'/g, "''")}'`;
+        // 批量处理插入语句，提高效率
+        const batchSize = 100;
+        for (let i = 0; i < rows.length; i += batchSize) {
+          const batch = rows.slice(i, i + batchSize);
+          const values = batch.map(row => {
+            const rowValues = Object.values(row).map(value => {
+              if (value === null) return 'NULL';
+              if (typeof value === 'boolean') return value ? 1 : 0;
+              if (typeof value === 'number') return value;
+              if (value instanceof Date) return `'${moment(value).format('YYYY-MM-DD HH:mm:ss')}'`;
+              if (Buffer.isBuffer(value)) return `0x${value.toString('hex')}`; 
+              return `'${value.toString().replace(/[\0\x08\x09\x1a\n\r"'\\\%]/g, char => {
+                switch (char) {
+                  case "\0": return "\\0";
+                  case "\x08": return "\\b";
+                  case "\x09": return "\\t";
+                  case "\x1a": return "\\z";
+                  case "\n": return "\\n";
+                  case "\r": return "\\r";
+                  case "\"":
+                  case "'":
+                  case "\\":
+                  case "%": return "\\"+char;
+                  default: return char;
+                }
+              })}'`;
+            });
+            return `(${rowValues.join(', ')})`;
           });
           
-          writeStream.write(
-            `INSERT INTO \`${tableName}\` (${columns.map(c => '`'+c+'`').join(', ')}) ` +
-            `VALUES (${values.join(', ')});\n`
-          );
+          const columns = Object.keys(rows[0]).map(key => `\`${key}\``).join(', ');
+          writeStream.write(`INSERT INTO \`${tableName}\` (${columns}) VALUES\n`);
+          writeStream.write(`${values.join(',\n')};\n`);
         }
         writeStream.write('\n');
       }
@@ -264,7 +286,7 @@ async function backupMysqlAllDatabase() {
 }
 
 /**
- * 备份MySQL数据库中的指定表数据���本地文件
+ * 备份MySQL数据库中的指定表数据到本地文件
  * 
  * @param {Object} config - MySQL数据库连接配置
  * @param {string} config.host - 数据库主机地址
@@ -312,7 +334,8 @@ async function backupMysqlDatabase() {
     `, [config.database]);
     
     const timestamp = moment().format('YYYYMMDDHHmmss');
-    const backupFile = path.join(backupDir, `backup-${timestamp}.sql`);
+    // const backupFile = path.join(backupDir, `mysql-backup-${timestamp}.sql`);
+    const backupFile = path.join(backupDir, `mysql-backup.sql`);
     const writeStream = fs.createWriteStream(backupFile);
 
     // 遍历每个表并备份
@@ -392,7 +415,8 @@ async function backupPostgresAllDatabase() {
     }
     
     const timestamp = moment().format('YYYYMMDDHHmmss');
-    const backupFile = path.join(backupDir, `postgres-backup-${timestamp}.sql`);
+    // const backupFile = path.join(backupDir, `postgres-backup-${timestamp}.sql`);
+    const backupFile = path.join(backupDir, `postgres-backup.sql`);
     const writeStream = fs.createWriteStream(backupFile);
 
     // 写入文件头部信息
@@ -509,7 +533,8 @@ async function backupPostgresDatabase() {
     
     await pool.connect();
     const timestamp = moment().format('YYYYMMDDHHmmss');
-    const backupFile = path.join(backupDir, `${tableName}-${timestamp}.sql`);
+    // const backupFile = path.join(backupDir, `postgres-${tableName}-backup-${timestamp}.sql`);
+    const backupFile = path.join(backupDir, `postgres-${tableName}-backup.sql`);
     const writeStream = fs.createWriteStream(backupFile);
 
     // 写入文件头部信息
