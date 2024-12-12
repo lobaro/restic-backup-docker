@@ -482,14 +482,14 @@ async function main() {
   const now = moment().hour();
   // 验证时间范围的有效性
   if (isNaN(start) || isNaN(end) || start < 0 || start > 23 || end < 0 || end > 23) {
-    console.error('无效的时间范围格式，已使用默认值"0-23"');
+    console.error('Invalid time range format, using default value "0-23"');
     // return;
     start = 0;
     end = 23;
   }
-  console.log(`当前时间: ${now}, 指定时间范围: ${start}-${end}`);
+  console.log(`Current time: ${now}, Specified time range: ${start}-${end}`);
   if (now < start || now > end) {
-    console.log('当前时间不在指定时间段内，备份任务已取消');
+    console.log(`Now not within the specified time period ${process.env.DATABASE_BACKUP_TIME}, Database Dump Task has been cancelled.`);
     return;
   }
   // 根据 DATABASE_TYPE 全局变判断要执行的备份类型
