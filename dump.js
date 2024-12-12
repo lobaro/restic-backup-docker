@@ -157,7 +157,7 @@ async function dumpMongoDatabase() {
 
 
 /**
- * 备份MySQL数据库中的指定表数据到本地文件
+ * 备份MySQL数据库中的所有的数据到本地文件
  * 
  * @param {Object} config - MySQL数据库连接配置
  * @param {string} config.host - 数据库主机地址
@@ -174,7 +174,7 @@ async function dumpMongoDatabase() {
  *   database: 'mydb'
  * };
  * const backupDir = './backup';
- * await backupMysqlDatabase(config, backupDir);
+ * await backupMysqlAllDatabase(config, backupDir);
  * 
  * @returns {Promise<void>}
  * @throws {Error} 当数据库连接或备份过程出错时抛出异常
@@ -197,14 +197,19 @@ async function backupMysqlAllDatabase() {
 
     await connection.connect();
     
-    // 修改获取表名的查询，排除系统表
+    // 查询所有表
+    // const [tables] = await connection.query(`
+    //   SELECT TABLE_NAME 
+    //   FROM INFORMATION_SCHEMA.TABLES 
+    //   WHERE TABLE_SCHEMA = ? 
+    //   AND TABLE_TYPE = 'BASE TABLE'
+    // `, [config.database]);
     const [tables] = await connection.query(`
-      SELECT TABLE_NAME 
-      FROM INFORMATION_SCHEMA.TABLES 
-      WHERE TABLE_SCHEMA = ? 
-      AND TABLE_TYPE = 'BASE TABLE'
+      SHOW FULL TABLES 
+      WHERE Table_type = 'BASE TABLE';
     `, [config.database]);
-    console.log('tables:',tables)
+
+    console.log('tables:', tables);
 
     const timestamp = moment().format('YYYYMMDDHHmmss');
     // const backupFile = path.join(backupDir, `mysql-backup-${timestamp}.sql`);
@@ -624,7 +629,7 @@ async function main() {
     console.log(`Now not within the specified time period ${process.env.DATABASE_BACKUP_TIME}, Database Dump Task has been cancelled.`);
     return;
   }
-  // 根据 DATABASE_TYPE 全局变判断要执行的备份类型
+  // ���据 DATABASE_TYPE 全局变判断要执行的备份类型
   if(process.env.DATABASE_TYPE){
     let type = process.env.DATABASE_TYPE.toLowerCase()
     switch(type){
@@ -640,7 +645,8 @@ async function main() {
         if(process.env.DATABASE_NAME){
           await backupMysqlDatabase()
         }else{
-          await backupMysqlAllDatabase()
+          console.error('DATABASE_NAME env must be specified');
+          // await backupMysqlAllDatabase()
         }
         break;
       case "pg":
@@ -653,7 +659,7 @@ async function main() {
         }
         break;
       default:
-        console.error('不支持的数据库类型:', type);
+        console.error('Unsupported database type:', type);
         break;
     }
   }
