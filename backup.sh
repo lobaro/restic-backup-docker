@@ -12,11 +12,52 @@ logLast() {
   echo "$1" >> ${lastLogfile}
 }
 
+backupDatebase(){
+  echo "### Start MongoDB Dump ###"
+  echo "Backup Datebase: ${DATABASE_TYPE}"
+  # 检查 dump 目录是否存在，如果存在则删除
+  if [ -d "/script/dump" ]; then
+      rm -rf /script/dump
+  fi
+  mkdir /script/dump
+  # 运行 dump 脚本
+  npm run dump
+  # 检查 /script/dump 目录下是否为空，不为空则复制 dump 数据到
+  if [ "$(ls -A /script/dump)" ]; then
+      # 检查 /data/dump 目录存在，自动删除旧备份；如果不存在则创建 dump 目录
+      if [ -d "/data/dump" ]; then
+        rm -rf /data/dump/*
+      else
+        mkdir /data/dump
+      fi
+      # 复制最新的备份
+      cp -r /script/dump /data/
+      echo "\n MongoDB Dump List:"
+      ls -l /data/dump
+  else
+      echo "./dump Folder Empty, MongoDB Dump Fail."
+  fi
+  echo "### End ${DATABASE_TYPE} Dump ###"
+}
+
 if [ -f "/hooks/pre-backup.sh" ]; then
     echo "Starting pre-backup script ..."
     /hooks/pre-backup.sh
 else
     echo "Pre-backup script not found ..."
+fi
+
+# Dump Datebase
+if [ -n "${DATABASE_TYPE}" ]; then
+    # 判断时间是否在晚上12点到凌晨5点之间
+    current_hour=$(date +%H)
+    if [[ $current_hour -ge 0 && $current_hour -le 23 ]]; then
+        echo "Current within the Backup Time Period (AM 0~5)"
+        backupDatebase
+    else
+        echo "Current not within the Backup Time Period (AM 0~5)"
+        echo "Skip ${DATABASE_TYPE} Dump"
+    fi
 fi
 
 start=`date +%s`
