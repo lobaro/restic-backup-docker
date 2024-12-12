@@ -13,7 +13,7 @@ logLast() {
 }
 
 backupDatebase(){
-  echo "### Start MongoDB Dump ###"
+  echo "### Start ${DATABASE_TYPE} Dump ###"
   echo "Backup Datebase: ${DATABASE_TYPE}"
   # 检查 dump 目录是否存在，如果存在则删除
   if [ -d "/script/dump" ]; then
@@ -50,16 +50,7 @@ fi
 
 # Dump Datebase
 if [ -n "${DATABASE_TYPE}" ]; then
-    # 判断时间是否在指定时间段内(建议凌晨1点到凌晨5点之间)
-    current_hour=$(date +%H)
-    # if [[ $current_hour -ge 0 && $current_hour -le 23 ]]; then
-    if [[ $current_hour -ge ${DATABASE_BACKUP_START} && $current_hour -le ${DATABASE_BACKUP_END} ]]; then
-        echo "Current within the Backup Time Period (${DATABASE_BACKUP_START}~${DATABASE_BACKUP_END})"
-        backupDatebase
-    else
-        echo "Current not within the Backup Time Period (${DATABASE_BACKUP_START}~${DATABASE_BACKUP_END})"
-        echo "Skip ${DATABASE_TYPE} Dump"
-    fi
+    backupDatebase
 fi
 
 start=`date +%s`
