@@ -314,12 +314,12 @@ async function backupMysqlAllDatabase() {
  * @returns {Promise<void>}
  * @throws {Error} 当数据库连接或备份过程出错时抛出异常
  */
-async function backupMysqlDatabase() {
+async function backupMysqlDatabase(databaseName) {
   const config = {
     host: process.env.DATABASE_HOST || process.env.MYSQL_HOST,
     user: process.env.DATABASE_USER || process.env.MYSQL_USER,
     password: process.env.DATABASE_PASSWORD || process.env.MYSQL_PASSWORD,
-    database: process.env.DATABASE_NAME || process.env.MYSQL_DATABASE,
+    database: databaseName,
     port: parseInt(process.env.DATABASE_PORT || process.env.MYSQL_PORT || 3306)
   };
   const connection = mysql.createConnection(config).promise();
@@ -341,7 +341,7 @@ async function backupMysqlDatabase() {
     
     const timestamp = moment().format('YYYYMMDDHHmmss');
     // const backupFile = path.join(backupDir, `mysql-backup-${timestamp}.sql`);
-    const backupFile = path.join(backupDir, `mysql-backup.sql`);
+    const backupFile = path.join(backupDir, `mysql-${databaseName}-backup.sql`);
     const writeStream = fs.createWriteStream(backupFile);
 
     // 遍历每个表并备份
@@ -516,17 +516,17 @@ async function backupPostgresAllDatabase() {
  * @param {number} config.port - 数据库端口号
  * @param {string} backupDir - 备份文件保存目录
  */
-async function backupPostgresDatabase() {
+async function backupPostgresDatabase(tableName) {
   const config = {
     host: process.env.DATABASE_HOST || process.env.PG_HOST,
     user: process.env.DATABASE_USER || process.env.PG_USER,
     password: process.env.DATABASE_PASSWORD || process.env.PG_PASSWORD,
-    database: process.env.DATABASE_NAME || process.env.PG_DATABASE,
+    database: databaseName,
     port: parseInt(process.env.DATABASE_PORT || process.env.PG_PORT || 5432),
   };
   const pool = new Pool(config);
   const backupDir = './dump';
-  const tableName = process.env.TABLE_NAME; // 新增：从环境变量获取表名
+  // const tableName = process.env.TABLE_NAME; // 新增：从环境变量获取表名
 
   try {
     if (!tableName) {
@@ -643,7 +643,13 @@ async function main() {
         break;
       case "mysql":
         if(process.env.DATABASE_NAME){
-          await backupMysqlDatabase()
+          // 备份数据库可能为多个，使用,进行分割
+          const databaseNames = process.env.DATABASE_NAME.split(',');
+          for(const databaseName of databaseNames){
+            console.log(`Backuping database: ${databaseName}`);
+            await backupMysqlDatabase(databaseName)
+            console.log(`Backuping database: ${databaseName} completed!`);
+          }
         }else{
           console.error('DATABASE_NAME env must be specified');
           // await backupMysqlAllDatabase()
@@ -653,7 +659,12 @@ async function main() {
       case "postgres":
       case "postgresql":
         if(process.env.TABLE_NAME){
-          await backupPostgresDatabase()
+          const databaseNames = process.env.DATABASE_NAME.split(',');
+          for(const databaseName of databaseNames){
+            console.log(`Backuping database: ${databaseName}`);
+            await backupPostgresDatabase(databaseName)
+            console.log(`Backuping database: ${databaseName} completed!`);
+          }
         }else{
           await backupPostgresAllDatabase()
         }
