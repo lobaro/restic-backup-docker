@@ -1,5 +1,5 @@
 const MongoClient = require('mongodb').MongoClient;
-const mysql = require('mysql');
+const mysql = require('mysql2');
 const { Pool } = require('pg');
 const { copyToStream } = require('pg-copy-streams');
 
@@ -187,7 +187,7 @@ async function backupMysqlAllDatabase() {
     database: process.env.DATABASE_NAME || process.env.MYSQL_DATABASE,
     port: parseInt(process.env.DATABASE_PORT || process.env.MYSQL_PORT || 3306)
   };
-  const connection = mysql.createConnection(config);
+  const connection = mysql.createConnection(config).promise();
   const backupDir = './dump';
 
   try {
@@ -274,7 +274,7 @@ async function backupMysqlDatabase() {
     database: process.env.DATABASE_NAME || process.env.MYSQL_DATABASE,
     port: parseInt(process.env.DATABASE_PORT || process.env.MYSQL_PORT || 3306)
   };
-  const connection = mysql.createConnection(config);
+  const connection = mysql.createConnection(config).promise();
   const backupDir = './dump';
 
   try {
@@ -424,7 +424,7 @@ async function backupPostgresDatabase() {
     if (!fs.existsSync(backupDir)) {
       fs.mkdirSync(backupDir);
     }
-    // ��接数据库
+    // 连接数据库
     await pool.connect();
 
     // 获取当前时间作为备份文件名
