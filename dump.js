@@ -264,7 +264,7 @@ async function backupMysqlAllDatabase() {
 }
 
 /**
- * 备份MySQL数据库中的指定表数据到��地文件
+ * 备份MySQL数据库中的指定表数据���本地文件
  * 
  * @param {Object} config - MySQL数据库连接配置
  * @param {string} config.host - 数据库主机地址
@@ -304,40 +304,50 @@ async function backupMysqlDatabase() {
 
     await connection.connect();
     
+    // 获取数据库中的所有表
+    const [tables] = await connection.query(`
+      SELECT TABLE_NAME 
+      FROM INFORMATION_SCHEMA.TABLES 
+      WHERE TABLE_SCHEMA = ?
+    `, [config.database]);
+    
     const timestamp = moment().format('YYYYMMDDHHmmss');
     const backupFile = path.join(backupDir, `backup-${timestamp}.sql`);
     const writeStream = fs.createWriteStream(backupFile);
 
-    // 获取表结构
-    const [tableStructure] = await connection.query(
-      `SHOW CREATE TABLE \`${config.database}\``
-    );
-    
-    // 写入表结构
-    writeStream.write(`-- Database table structure\n`);
-    writeStream.write(`DROP TABLE IF EXISTS \`${config.database}\`;\n`);
-    writeStream.write(`${tableStructure[0]['Create Table']};\n\n`);
-    
-    // 获取表数据
-    const [rows] = await connection.query(`SELECT * FROM \`${config.database}\``);
-    
-    if (rows.length > 0) {
-      // 写入数据插入语句
-      writeStream.write(`-- Data records\n`);
-      const columns = Object.keys(rows[0]);
+    // 遍历每个表并备份
+    for (const table of tables) {
+      const tableName = table.TABLE_NAME;
       
-      for (const row of rows) {
-        const values = columns.map(column => {
-          const value = row[column];
-          if (value === null) return 'NULL';
-          if (typeof value === 'number') return value;
-          return `'${value.toString().replace(/'/g, "''")}'`;
-        });
+      // 获取表结构
+      const [tableStructure] = await connection.query(`SHOW CREATE TABLE \`${tableName}\``);
+      
+      // 写入表结构
+      writeStream.write(`-- Table structure for ${tableName}\n`);
+      writeStream.write(`DROP TABLE IF EXISTS \`${tableName}\`;\n`);
+      writeStream.write(`${tableStructure[0]['Create Table']};\n\n`);
+      
+      // 获取表数据
+      const [rows] = await connection.query(`SELECT * FROM \`${tableName}\``);
+      
+      if (rows.length > 0) {
+        writeStream.write(`-- Data for table ${tableName}\n`);
+        const columns = Object.keys(rows[0]);
         
-        writeStream.write(
-          `INSERT INTO \`${config.database}\` (${columns.map(c => '`'+c+'`').join(', ')}) ` +
-          `VALUES (${values.join(', ')});\n`
-        );
+        for (const row of rows) {
+          const values = columns.map(column => {
+            const value = row[column];
+            if (value === null) return 'NULL';
+            if (typeof value === 'number') return value;
+            return `'${value.toString().replace(/'/g, "''")}'`;
+          });
+          
+          writeStream.write(
+            `INSERT INTO \`${tableName}\` (${columns.map(c => '`'+c+'`').join(', ')}) ` +
+            `VALUES (${values.join(', ')});\n`
+          );
+        }
+        writeStream.write('\n');
       }
     }
 
