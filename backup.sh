@@ -13,6 +13,7 @@ logLast() {
 }
 
 backupDatebase(){
+  echo ""
   echo "### Start ${DATABASE_TYPE} Dump ###"
   echo "Backup Datebase: ${DATABASE_TYPE}"
   # 检查 dump 目录是否存在，如果存在则删除
@@ -33,12 +34,14 @@ backupDatebase(){
       fi
       # 复制最新的备份
       cp -r /script/dump /data/
-      echo "\n MongoDB Dump List:"
+      echo ""
+      echo "MongoDB Dump List:"
       ls -l /data/dump
   else
       echo "./dump Folder Empty, MongoDB Dump Fail."
   fi
   echo "### End ${DATABASE_TYPE} Dump ###"
+  echo ""
 }
 
 if [ -f "/hooks/pre-backup.sh" ]; then
