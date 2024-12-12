@@ -69,7 +69,7 @@ RUN mkdir /script && \
     chgrp -R 0 /script && \
     chmod -R g=u /script 
 COPY package.json /script/package.json
-COPY package.json /script/dump.js
+COPY dump.js /script/dump.js
 RUN chmod u+x /script/*
 RUN cd /script && \
     npm install
