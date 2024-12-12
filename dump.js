@@ -204,6 +204,7 @@ async function backupMysqlAllDatabase() {
       WHERE TABLE_SCHEMA = ? 
       AND TABLE_TYPE = 'BASE TABLE'
     `, [config.database]);
+    console.log('tables:',tables)
 
     const timestamp = moment().format('YYYYMMDDHHmmss');
     // const backupFile = path.join(backupDir, `mysql-backup-${timestamp}.sql`);
