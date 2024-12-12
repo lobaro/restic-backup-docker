@@ -112,9 +112,9 @@ async function dumpMongoAllDatabases() {
  * @returns {Promise<void>}
  * @throws {Error} 当数据库连接或备份过程出错时抛出异常
  */
-async function dumpMongoDatabase() {
+async function dumpMongoDatabase(dbName) {
   const uri = `mongodb://${process.env.DATABASE_USER || process.env.MONGO_ROOT_USERNAME}:${process.env.DATABASE_PASSWORD || process.env.MONGO_ROOT_PASSWORD}@${process.env.DATABASE_HOST || process.env.MONGO_HOST}:${process.env.DATABASE_PORT || process.env.MONGO_PORT || '27017'}/`;
-  const dbName = process.env.DATABASE_NAME || process.env.MONGO_DATABASE; // 替换成你的数据库名称
+  // const dbName = process.env.DATABASE_NAME || process.env.MONGO_DATABASE; // 替换成你的数据库名称
   try {
     if(!dbName){
       console.error('DATABASE_NAME or MONGO_DATEBASE is not set');
@@ -137,7 +137,13 @@ async function dumpMongoDatabase() {
       const collectionName = collection.collectionName;
 
       // 创建一个文件来存储 dump 数据
-      const dumpFile = `${dumpDir}/${collectionName}.json`;
+      const dumpFile = `${dumpDir}/${dbName}/${collectionName}.json`;
+
+      // 创建文件夹
+      const collectionDir = `${dumpDir}/${dbName}`;
+      if (!fs.existsSync(collectionDir)) {
+        fs.mkdirSync(collectionDir);
+      }
 
       // 读取集合数据
       const documents = await collection.find().toArray();
@@ -636,7 +642,13 @@ async function main() {
       case "mongo":
       case "mongodb":
         if(process.env.DATABASE_NAME){
-          await dumpMongoDatabase()
+          // 备份数据库可能为多个，使用,进行分割
+          const databaseNames = process.env.DATABASE_NAME.split(',');
+          for(const databaseName of databaseNames){
+            console.log(`Backuping database: ${databaseName}`);
+            await dumpMongoDatabase(databaseName)
+            console.log(`Backuping database: ${databaseName} completed!`);
+          }
         }else{
           await dumpMongoAllDatabases()
         }
