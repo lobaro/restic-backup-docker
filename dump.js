@@ -387,7 +387,7 @@ async function backupPostgresAllDatabase() {
 
     // 写入文件头部信息
     writeStream.write(`-- PostgreSQL dump\n`);
-    writeStream.write(`-- 创建时间：${moment().format('YYYY-MM-DD HH:mm:ss')}\n\n`);
+    writeStream.write(`-- Created at: ${moment().format('YYYY-MM-DD HH:mm:ss')}\n\n`);
 
     // 获取所有表名
     const { rows: tables } = await pool.query(`
@@ -412,7 +412,7 @@ async function backupPostgresAllDatabase() {
       `, [tableName]);
 
       // 写入表结构
-      writeStream.write(`-- 表结构: ${tableName}\n`);
+      writeStream.write(`-- Table structure: ${tableName}\n`);
       writeStream.write(`DROP TABLE IF EXISTS "${tableName}";\n`);
       writeStream.write(`CREATE TABLE "${tableName}" (\n`);
       
@@ -436,7 +436,7 @@ async function backupPostgresAllDatabase() {
       // 获取并写入表数据
       const { rows: data } = await pool.query(`SELECT * FROM "${tableName}"`);
       if (data.length > 0) {
-        writeStream.write(`-- 表数据: ${tableName}\n`);
+        writeStream.write(`-- Table data: ${tableName}\n`);
         for (const row of data) {
           const values = Object.values(row).map(val => {
             if (val === null) return 'NULL';
@@ -454,10 +454,10 @@ async function backupPostgresAllDatabase() {
     }
 
     writeStream.end();
-    console.log(`数据库备份完成！备份文件: ${backupFile}`);
+    console.log(`Database backup completed! Backup file: ${backupFile}`);
 
   } catch (err) {
-    console.error('数据库备份过程中出错:', err);
+    console.error('Error during database backup:', err);
   } finally {
     if (pool) {
       await pool.end();
@@ -504,7 +504,7 @@ async function backupPostgresDatabase() {
 
     // 写入文件头部信息
     writeStream.write(`-- PostgreSQL dump of table ${tableName}\n`);
-    writeStream.write(`-- 创建时间：${moment().format('YYYY-MM-DD HH:mm:ss')}\n\n`);
+    writeStream.write(`-- Created at: ${moment().format('YYYY-MM-DD HH:mm:ss')}\n\n`);
 
     // 获取表结构
     const { rows: columns } = await pool.query(`
@@ -516,7 +516,7 @@ async function backupPostgresDatabase() {
     `, [tableName]);
 
     // 写入表结构
-    writeStream.write(`-- 表结构\n`);
+    writeStream.write(`-- Table structure\n`);
     writeStream.write(`DROP TABLE IF EXISTS "${tableName}";\n`);
     writeStream.write(`CREATE TABLE "${tableName}" (\n`);
     
@@ -540,7 +540,7 @@ async function backupPostgresDatabase() {
     // 获取并写入表数据
     const { rows: data } = await pool.query(`SELECT * FROM "${tableName}"`);
     if (data.length > 0) {
-      writeStream.write(`-- 表数据\n`);
+      writeStream.write(`-- Table data\n`);
       for (const row of data) {
         const values = Object.values(row).map(val => {
           if (val === null) return 'NULL';
@@ -556,11 +556,11 @@ async function backupPostgresDatabase() {
     }
 
     writeStream.end();
-    console.log(`表 ${tableName} 已备份到 ${backupFile}`);
-    console.log('数据库备份完成！');
+    console.log(`Table ${tableName} has been backed up to ${backupFile}`);
+    console.log('Database backup completed!');
 
   } catch (err) {
-    console.error('数据库备份过程中出错:', err);
+    console.error('Error during database backup:', err);
   } finally {
     if (pool) {
       await pool.end();
