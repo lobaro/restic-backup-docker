@@ -21,6 +21,7 @@ backupDatebase(){
   fi
   mkdir /script/dump
   # 运行 dump 脚本
+  cd /script
   npm run dump
   # 检查 /script/dump 目录下是否为空，不为空则复制 dump 数据到
   if [ "$(ls -A /script/dump)" ]; then
