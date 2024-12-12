@@ -142,7 +142,7 @@ async function dumpMongoDatabase() {
       // 读取集合数据
       const documents = await collection.find().toArray();
 
-      // 将数���写入文件
+      // 将数据写入文件
       fs.writeFileSync(dumpFile, JSON.stringify(documents, null, 2));
 
       console.log(`Dumped ${collectionName} to ${dumpFile}`);
@@ -424,7 +424,7 @@ async function backupPostgresDatabase() {
     if (!fs.existsSync(backupDir)) {
       fs.mkdirSync(backupDir);
     }
-    // 连接数据库
+    // ��接数据库
     await pool.connect();
 
     // 获取当前时间作为备份文件名
@@ -472,36 +472,42 @@ async function backupPostgresDatabase() {
   }
 }
 
-// 根据 DATABASE_TYPE 全局变判断要执行的备份类型
-if(process.env.DATABASE_TYPE){
-  let type = process.env.DATABASE_TYPE.toLowerCase()
-  switch(type){
-    case "mongo":
-    case "mongodb":
-      if(process.env.DATABASE_NAME){
-        await dumpMongoDatabase()
-      }else{
-        await dumpMongoAllDatabases()
-      }
-    break;
-    case "mysql":
-      if(process.env.DATABASE_NAME){
-        await backupMysqlDatabase()
-      }else{
-        await backupMysqlAllDatabase()
-      }
-    break;
-    case "pg":
-    case "postgres":
-    case "postgresql":
-      if(process.env.TABLE_NAME){
-        await backupPostgresDatabase()
-      }else{
-        await backupPostgresAllDatabase()
-      }
-    break;
-    default:
-      console.error('不支持的数据库类型:', type);
-    break;
+// 创建一个主函数来处理数据库备份
+async function main() {
+  // 根据 DATABASE_TYPE 全局变判断要执行的备份类型
+  if(process.env.DATABASE_TYPE){
+    let type = process.env.DATABASE_TYPE.toLowerCase()
+    switch(type){
+      case "mongo":
+      case "mongodb":
+        if(process.env.DATABASE_NAME){
+          await dumpMongoDatabase()
+        }else{
+          await dumpMongoAllDatabases()
+        }
+        break;
+      case "mysql":
+        if(process.env.DATABASE_NAME){
+          await backupMysqlDatabase()
+        }else{
+          await backupMysqlAllDatabase()
+        }
+        break;
+      case "pg":
+      case "postgres":
+      case "postgresql":
+        if(process.env.TABLE_NAME){
+          await backupPostgresDatabase()
+        }else{
+          await backupPostgresAllDatabase()
+        }
+        break;
+      default:
+        console.error('不支持的数据库类型:', type);
+        break;
+    }
   }
 }
+
+// 执行主函数
+main().catch(console.error);
