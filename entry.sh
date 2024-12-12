@@ -2,6 +2,15 @@
 
 echo "Starting container ..."
 
+# Copy Custem Hooks Script File
+if [ -d "/custem" ]; then
+  mkdir /hooks
+  cp -L /custem/* /hooks
+  chmod u+x /hooks/*
+  # Run npm install
+  npm install
+fi
+
 if [ -n "${NFS_TARGET}" ]; then
     echo "Mounting NFS based on NFS_TARGET: ${NFS_TARGET}"
     mount -o nolock -v ${NFS_TARGET} /mnt/restic
