@@ -148,7 +148,7 @@ NEW Env For Database Dump (Only MongoDB has passed the test, other types databas
 * `DATABASE_BACKUP_TIME` - Optional. Database backup is automatically enabled within the specified time range (default 0-23)
 * `DATABASE_HOST` - Optional. Database host address
 * `DATABASE_PORT` - Optional. Database host port (if not specified, it will automatically follow the default port value of the database type)
-* `DATABASE_NAME` - Optional. Database name, Supports specifying multiple database names separated by ','. If not specified all database tables (except system tables) are used by default. Database type **mysql** MUST set `DATABASE_NAME`. 
+* `DATABASE_NAME` - Optional. Database name, Supports specifying multiple database names separated by ','. If not specified all database tables (except system tables) are used by default. Database type **mysql** AND **postgresql** MUST set. 
 * `DATABASE_USER` - Optional. Database Username
 * `DATABASE_PASSWORD` - Optional. Database password
 
