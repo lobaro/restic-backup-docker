@@ -198,53 +198,73 @@ async function backupMysqlAllDatabase() {
     await connection.connect();
     
     // 获取所有表名
-    const [tables] = await util.promisify(connection.query)
-      .call(connection, `
-        SELECT TABLE_NAME 
-        FROM INFORMATION_SCHEMA.TABLES 
-        WHERE TABLE_SCHEMA = ? 
-        AND TABLE_NAME NOT LIKE 'sys_%'
-        AND TABLE_NAME NOT LIKE 'performance_%'
-        AND TABLE_NAME NOT LIKE 'innodb_%'
-      `, [config.database]);
+    const [tables] = await connection.query(`
+      SELECT TABLE_NAME 
+      FROM INFORMATION_SCHEMA.TABLES 
+      WHERE TABLE_SCHEMA = ? 
+      AND TABLE_NAME NOT LIKE 'sys_%'
+      AND TABLE_NAME NOT LIKE 'performance_%'
+      AND TABLE_NAME NOT LIKE 'innodb_%'
+    `, [config.database]);
 
     const timestamp = moment().format('YYYYMMDDHHmmss');
+    const backupFile = path.join(backupDir, `mysql-backup-${timestamp}.sql`);
+    const writeStream = fs.createWriteStream(backupFile);
     
+    // 写入文件头部信息
+    writeStream.write(`-- MySQL dump\n`);
+    writeStream.write(`-- Created at: ${moment().format('YYYY-MM-DD HH:mm:ss')}\n\n`);
+    writeStream.write(`SET FOREIGN_KEY_CHECKS=0;\n\n`);
+
     // 为每个表创建备份
     for (const table of tables) {
       const tableName = table.TABLE_NAME;
-      const tableBackupFile = path.join(backupDir, `${tableName}-${timestamp}.csv`);
       
-      const writeStream = fs.createWriteStream(tableBackupFile);
-      const query = `SELECT * FROM ${tableName}`;
-      const stream = connection.query(query);
+      // 获取表结构
+      const [tableStructure] = await connection.query(`SHOW CREATE TABLE \`${tableName}\``);
+      writeStream.write(`-- Table structure: ${tableName}\n`);
+      writeStream.write(`DROP TABLE IF EXISTS \`${tableName}\`;\n`);
+      writeStream.write(`${tableStructure[0]['Create Table']};\n\n`);
+
+      // 获取表数据
+      const [rows] = await connection.query(`SELECT * FROM \`${tableName}\``);
       
-      await new Promise((resolve, reject) => {
-        stream.on('error', reject);
-        stream.on('result', (row) => {
-          const rowString = Object.values(row).join(',') + '\n';
-          writeStream.write(rowString);
-        });
-        stream.on('end', () => {
-          writeStream.end();
-          console.log(`表 ${tableName} 已备份到 ${tableBackupFile}`);
-          resolve();
-        });
-      });
+      if (rows.length > 0) {
+        writeStream.write(`-- Table data: ${tableName}\n`);
+        const columns = Object.keys(rows[0]);
+        
+        for (const row of rows) {
+          const values = columns.map(column => {
+            const value = row[column];
+            if (value === null) return 'NULL';
+            if (typeof value === 'number') return value;
+            return `'${value.toString().replace(/'/g, "''")}'`;
+          });
+          
+          writeStream.write(
+            `INSERT INTO \`${tableName}\` (${columns.map(c => '`'+c+'`').join(', ')}) ` +
+            `VALUES (${values.join(', ')});\n`
+          );
+        }
+        writeStream.write('\n');
+      }
     }
 
-    console.log('所有数据表备份完成！');
+    writeStream.write(`SET FOREIGN_KEY_CHECKS=1;\n`);
+    writeStream.end();
+    console.log(`Database backup completed! Backup file: ${backupFile}`);
+
   } catch (err) {
-    console.error('数据库备份过程中出错:', err);
+    console.error('Error during database backup:', err);
   } finally {
     if (connection) {
-      connection.end();
+      await connection.end();
     }
   }
 }
 
 /**
- * 备份MySQL数据库中的指定表数据到本地文件
+ * 备份MySQL数据库中的指定表数据到��地文件
  * 
  * @param {Object} config - MySQL数据库连接配置
  * @param {string} config.host - 数据库主机地址
@@ -278,42 +298,57 @@ async function backupMysqlDatabase() {
   const backupDir = './dump';
 
   try {
-    // 创建备份目录
     if (!fs.existsSync(backupDir)) {
       fs.mkdirSync(backupDir);
     }
 
-    // 连接数据库
     await connection.connect();
-
-    // 获取当前时间作为备份文件名
+    
     const timestamp = moment().format('YYYYMMDDHHmmss');
     const backupFile = path.join(backupDir, `backup-${timestamp}.sql`);
-
-    // 执行备份命令
-    const query = `SELECT * FROM ${process.env.DATABASE_NAME || process.env.MYSQL_DATABASE}`; // 替换为你要备份的表名
-    const stream = connection.query(query);
-
-    // 写入备份文件
     const writeStream = fs.createWriteStream(backupFile);
-    stream.on('rows', (rows) => {
-      // 处理结果集，并写入备份文件
-      rows.forEach((row) => {
-        // 将数据转换为字符串，并写入文件
-        const rowString = Object.values(row).join(',');
-        writeStream.write(rowString + '\n');
-      });
-    });
-    stream.on('end', () => {
-      console.log(`Database backup completed successfully! Backup file: ${backupFile}`);
-    });
+
+    // 获取表结构
+    const [tableStructure] = await connection.query(
+      `SHOW CREATE TABLE \`${config.database}\``
+    );
+    
+    // 写入表结构
+    writeStream.write(`-- Database table structure\n`);
+    writeStream.write(`DROP TABLE IF EXISTS \`${config.database}\`;\n`);
+    writeStream.write(`${tableStructure[0]['Create Table']};\n\n`);
+    
+    // 获取表数据
+    const [rows] = await connection.query(`SELECT * FROM \`${config.database}\``);
+    
+    if (rows.length > 0) {
+      // 写入数据插入语句
+      writeStream.write(`-- Data records\n`);
+      const columns = Object.keys(rows[0]);
+      
+      for (const row of rows) {
+        const values = columns.map(column => {
+          const value = row[column];
+          if (value === null) return 'NULL';
+          if (typeof value === 'number') return value;
+          return `'${value.toString().replace(/'/g, "''")}'`;
+        });
+        
+        writeStream.write(
+          `INSERT INTO \`${config.database}\` (${columns.map(c => '`'+c+'`').join(', ')}) ` +
+          `VALUES (${values.join(', ')});\n`
+        );
+      }
+    }
+
+    writeStream.end();
+    console.log(`Database backup completed! Backup file: ${backupFile}`);
 
   } catch (err) {
-    console.error('Error connecting to database:', err);
+    console.error('Error during database backup:', err);
   } finally {
-    // 关闭数据库连接
     if (connection) {
-      connection.end();
+      await connection.end();
     }
   }
 }
@@ -342,52 +377,90 @@ async function backupPostgresAllDatabase() {
   const backupDir = './dump';
 
   try {
-    // 创建备份目录
     if (!fs.existsSync(backupDir)) {
       fs.mkdirSync(backupDir);
     }
-    // 连接数据库
-    await pool.connect();
-
-    // 获取当前时间作为备份文件名
+    
     const timestamp = moment().format('YYYYMMDDHHmmss');
-    const backupFile = path.join(backupDir, `backup-${timestamp}.sql`);
+    const backupFile = path.join(backupDir, `postgres-backup-${timestamp}.sql`);
+    const writeStream = fs.createWriteStream(backupFile);
 
-    // 首先获取所有表名
-    const tablesQuery = `
+    // 写入文件头部信息
+    writeStream.write(`-- PostgreSQL dump\n`);
+    writeStream.write(`-- 创建时间：${moment().format('YYYY-MM-DD HH:mm:ss')}\n\n`);
+
+    // 获取所有表名
+    const { rows: tables } = await pool.query(`
       SELECT table_name 
       FROM information_schema.tables 
       WHERE table_schema = 'public' 
       AND table_type = 'BASE TABLE'
-    `;
-    const { rows: tables } = await pool.query(tablesQuery);
+      AND table_name NOT LIKE 'pg_%'
+      AND table_name NOT LIKE 'sql_%'
+    `);
 
-    // 为每个表创建一个备份文件
     for (const table of tables) {
-      // 跳过系统表
-      if (table.table_name.startsWith('pg_') || table.table_name.startsWith('sql_')) {
-        console.log(`Skipping system table: ${table.table_name}`);
-        continue;
-      } 
       const tableName = table.table_name;
-      const tableBackupFile = path.join(backupDir, `${tableName}-${timestamp}.csv`);
       
-      // 使用COPY命令备份单个表
-      const copyQuery = `COPY ${tableName} TO STDOUT WITH (FORMAT CSV, HEADER)`;
-      const writeStream = fs.createWriteStream(tableBackupFile);
+      // 获取表结构
+      const { rows: columns } = await pool.query(`
+        SELECT column_name, data_type, character_maximum_length, 
+               is_nullable, column_default
+        FROM information_schema.columns 
+        WHERE table_name = $1 
+        ORDER BY ordinal_position
+      `, [tableName]);
+
+      // 写入表结构
+      writeStream.write(`-- 表结构: ${tableName}\n`);
+      writeStream.write(`DROP TABLE IF EXISTS "${tableName}";\n`);
+      writeStream.write(`CREATE TABLE "${tableName}" (\n`);
       
-      const copyStream = await pool.query(copyToStream(copyQuery));
-      copyStream.pipe(writeStream);
+      const columnDefs = columns.map(col => {
+        let def = `  "${col.column_name}" ${col.data_type}`;
+        if (col.character_maximum_length) {
+          def += `(${col.character_maximum_length})`;
+        }
+        if (col.is_nullable === 'NO') {
+          def += ' NOT NULL';
+        }
+        if (col.column_default) {
+          def += ` DEFAULT ${col.column_default}`;
+        }
+        return def;
+      });
       
-      console.log(`Table ${tableName} backed up to ${tableBackupFile}`);
+      writeStream.write(columnDefs.join(',\n'));
+      writeStream.write('\n);\n\n');
+
+      // 获取并写入表数据
+      const { rows: data } = await pool.query(`SELECT * FROM "${tableName}"`);
+      if (data.length > 0) {
+        writeStream.write(`-- 表数据: ${tableName}\n`);
+        for (const row of data) {
+          const values = Object.values(row).map(val => {
+            if (val === null) return 'NULL';
+            if (typeof val === 'number') return val;
+            return `'${val.toString().replace(/'/g, "''")}'`;
+          });
+          
+          writeStream.write(
+            `INSERT INTO "${tableName}" (${Object.keys(row).map(k => `"${k}"`).join(', ')}) ` +
+            `VALUES (${values.join(', ')});\n`
+          );
+        }
+        writeStream.write('\n');
+      }
     }
-    console.log('Database backup completed successfully!');
+
+    writeStream.end();
+    console.log(`数据库备份完成！备份文件: ${backupFile}`);
+
   } catch (err) {
-    console.error('Error connecting to database:', err);
+    console.error('数据库备份过程中出错:', err);
   } finally {
-    // 关闭数据库连接
     if (pool) {
-      pool.end();
+      await pool.end();
     }
   }
 }
@@ -420,54 +493,77 @@ async function backupPostgresDatabase() {
       throw new Error('TABLE_NAME environment variable is not set');
     }
 
-    // 创建备份目录
     if (!fs.existsSync(backupDir)) {
       fs.mkdirSync(backupDir);
     }
-    // 连接数据库
+    
     await pool.connect();
-
-    // 获取当前时间作为备份文件名
     const timestamp = moment().format('YYYYMMDDHHmmss');
-    const backupFile = path.join(backupDir, `backup-${timestamp}.sql`);
+    const backupFile = path.join(backupDir, `${tableName}-${timestamp}.sql`);
+    const writeStream = fs.createWriteStream(backupFile);
 
-    // 直接备份指定的表
-    const tableBackupFile = path.join(backupDir, `${tableName}-${timestamp}.csv`);
+    // 写入文件头部信息
+    writeStream.write(`-- PostgreSQL dump of table ${tableName}\n`);
+    writeStream.write(`-- 创建时间：${moment().format('YYYY-MM-DD HH:mm:ss')}\n\n`);
+
+    // 获取表结构
+    const { rows: columns } = await pool.query(`
+      SELECT column_name, data_type, character_maximum_length, 
+             is_nullable, column_default
+      FROM information_schema.columns 
+      WHERE table_name = $1 
+      ORDER BY ordinal_position
+    `, [tableName]);
+
+    // 写入表结构
+    writeStream.write(`-- 表结构\n`);
+    writeStream.write(`DROP TABLE IF EXISTS "${tableName}";\n`);
+    writeStream.write(`CREATE TABLE "${tableName}" (\n`);
     
-    // 验证表是否存在
-    const tableExistsQuery = `
-      SELECT EXISTS (
-        SELECT 1 
-        FROM information_schema.tables 
-        WHERE table_schema = 'public' 
-        AND table_name = $1
-      )`;
-    const { rows: [{ exists }] } = await pool.query(tableExistsQuery, [tableName]);
-    
-    if (!exists) {
-      throw new Error(`Table "${tableName}" does not exist`);
-    }
-    
-    // 使用COPY命令备份指定表
-    const copyQuery = `COPY ${tableName} TO STDOUT WITH (FORMAT CSV, HEADER)`;
-    const writeStream = fs.createWriteStream(tableBackupFile);
-    
-    const copyStream = await pool.query(copyToStream(copyQuery));
-    await new Promise((resolve, reject) => {
-      copyStream.on('error', reject);
-      writeStream.on('error', reject);
-      writeStream.on('finish', resolve);
-      copyStream.pipe(writeStream);
+    const columnDefs = columns.map(col => {
+      let def = `  "${col.column_name}" ${col.data_type}`;
+      if (col.character_maximum_length) {
+        def += `(${col.character_maximum_length})`;
+      }
+      if (col.is_nullable === 'NO') {
+        def += ' NOT NULL';
+      }
+      if (col.column_default) {
+        def += ` DEFAULT ${col.column_default}`;
+      }
+      return def;
     });
     
-    console.log(`Table ${tableName} backed up to ${tableBackupFile}`);
-    console.log('Database backup completed successfully!');
+    writeStream.write(columnDefs.join(',\n'));
+    writeStream.write('\n);\n\n');
+
+    // 获取并写入表数据
+    const { rows: data } = await pool.query(`SELECT * FROM "${tableName}"`);
+    if (data.length > 0) {
+      writeStream.write(`-- 表数据\n`);
+      for (const row of data) {
+        const values = Object.values(row).map(val => {
+          if (val === null) return 'NULL';
+          if (typeof val === 'number') return val;
+          return `'${val.toString().replace(/'/g, "''")}'`;
+        });
+        
+        writeStream.write(
+          `INSERT INTO "${tableName}" (${Object.keys(row).map(k => `"${k}"`).join(', ')}) ` +
+          `VALUES (${values.join(', ')});\n`
+        );
+      }
+    }
+
+    writeStream.end();
+    console.log(`表 ${tableName} 已备份到 ${backupFile}`);
+    console.log('数据库备份完成！');
+
   } catch (err) {
-    console.error('Error connecting to database:', err);
+    console.error('数据库备份过程中出错:', err);
   } finally {
-    // 关闭数据库连接
     if (pool) {
-      pool.end();
+      await pool.end();
     }
   }
 }
