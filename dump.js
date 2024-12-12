@@ -474,6 +474,24 @@ async function backupPostgresDatabase() {
 
 // 创建一个主函数来处理数据库备份
 async function main() {
+  // 通过TIME_RANGE环境变量指定时间范围，格式为"HH-HH"，如"0-23"
+  const timeRange = process.env.DATABASE_BACKUP_TIME || "0-23";
+  const [startStr, endStr] = timeRange.split("-");
+  let start = parseInt(startStr);
+  let end = parseInt(endStr);
+  const now = moment().hour();
+  // 验证时间范围的有效性
+  if (isNaN(start) || isNaN(end) || start < 0 || start > 23 || end < 0 || end > 23) {
+    console.error('无效的时间范围格式，已使用默认值"0-23"');
+    // return;
+    start = 0;
+    end = 23;
+  }
+  console.log(`当前时间: ${now}, 指定时间范围: ${start}-${end}`);
+  if (now < start || now > end) {
+    console.log('当前时间不在指定时间段内，备份任务已取消');
+    return;
+  }
   // 根据 DATABASE_TYPE 全局变判断要执行的备份类型
   if(process.env.DATABASE_TYPE){
     let type = process.env.DATABASE_TYPE.toLowerCase()
