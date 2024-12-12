@@ -410,12 +410,12 @@ async function backupMysqlDatabase(databaseName) {
  * @param {number} config.port - 数据库端口号
  * @param {string} backupDir - 备份文件保存目录
  */
-async function backupPostgresAllDatabase() {
+async function backupPostgresDatabase(databaseName) {
   const config = {
     host: process.env.DATABASE_HOST || process.env.PG_HOST,
     user: process.env.DATABASE_USER || process.env.PG_USER,
     password: process.env.DATABASE_PASSWORD || process.env.PG_PASSWORD,
-    database: process.env.DATABASE_NAME || process.env.PG_DATABASE,
+    database: databaseName,
     port: parseInt(process.env.DATABASE_PORT || process.env.PG_PORT || 5432),
   };
   const pool = new Pool(config);
@@ -428,7 +428,7 @@ async function backupPostgresAllDatabase() {
     
     const timestamp = moment().format('YYYYMMDDHHmmss');
     // const backupFile = path.join(backupDir, `postgres-backup-${timestamp}.sql`);
-    const backupFile = path.join(backupDir, `postgres-backup.sql`);
+    const backupFile = path.join(backupDir, `postgres-${databaseName}-backup.sql`);
     const writeStream = fs.createWriteStream(backupFile);
 
     // 写入文件头部信息
@@ -511,109 +511,6 @@ async function backupPostgresAllDatabase() {
   }
 }
 
-/**
- * 备份PostgreSQL数据库中的指定的表数据到本地文件
- * 
- * @param {Object} config - PostgreSQL数据库连接配置
- * @param {string} config.user - 数据库用户名
- * @param {string} config.host - 数据库主机地址
- * @param {string} config.database - 数据库名称
- * @param {string} config.password - 数据库密码
- * @param {number} config.port - 数据库端口号
- * @param {string} backupDir - 备份文件保存目录
- */
-async function backupPostgresDatabase(tableName) {
-  const config = {
-    host: process.env.DATABASE_HOST || process.env.PG_HOST,
-    user: process.env.DATABASE_USER || process.env.PG_USER,
-    password: process.env.DATABASE_PASSWORD || process.env.PG_PASSWORD,
-    database: databaseName,
-    port: parseInt(process.env.DATABASE_PORT || process.env.PG_PORT || 5432),
-  };
-  const pool = new Pool(config);
-  const backupDir = './dump';
-  // const tableName = process.env.TABLE_NAME; // 新增：从环境变量获取表名
-
-  try {
-    if (!tableName) {
-      throw new Error('TABLE_NAME environment variable is not set');
-    }
-
-    if (!fs.existsSync(backupDir)) {
-      fs.mkdirSync(backupDir);
-    }
-    
-    await pool.connect();
-    const timestamp = moment().format('YYYYMMDDHHmmss');
-    // const backupFile = path.join(backupDir, `postgres-${tableName}-backup-${timestamp}.sql`);
-    const backupFile = path.join(backupDir, `postgres-${tableName}-backup.sql`);
-    const writeStream = fs.createWriteStream(backupFile);
-
-    // 写入文件头部信息
-    writeStream.write(`-- PostgreSQL dump of table ${tableName}\n`);
-    writeStream.write(`-- Created at: ${moment().format('YYYY-MM-DD HH:mm:ss')}\n\n`);
-
-    // 获取表结构
-    const { rows: columns } = await pool.query(`
-      SELECT column_name, data_type, character_maximum_length, 
-             is_nullable, column_default
-      FROM information_schema.columns 
-      WHERE table_name = $1 
-      ORDER BY ordinal_position
-    `, [tableName]);
-
-    // 写入表结构
-    writeStream.write(`-- Table structure\n`);
-    writeStream.write(`DROP TABLE IF EXISTS "${tableName}";\n`);
-    writeStream.write(`CREATE TABLE "${tableName}" (\n`);
-    
-    const columnDefs = columns.map(col => {
-      let def = `  "${col.column_name}" ${col.data_type}`;
-      if (col.character_maximum_length) {
-        def += `(${col.character_maximum_length})`;
-      }
-      if (col.is_nullable === 'NO') {
-        def += ' NOT NULL';
-      }
-      if (col.column_default) {
-        def += ` DEFAULT ${col.column_default}`;
-      }
-      return def;
-    });
-    
-    writeStream.write(columnDefs.join(',\n'));
-    writeStream.write('\n);\n\n');
-
-    // 获取并写入表数据
-    const { rows: data } = await pool.query(`SELECT * FROM "${tableName}"`);
-    if (data.length > 0) {
-      writeStream.write(`-- Table data\n`);
-      for (const row of data) {
-        const values = Object.values(row).map(val => {
-          if (val === null) return 'NULL';
-          if (typeof val === 'number') return val;
-          return `'${val.toString().replace(/'/g, "''")}'`;
-        });
-        
-        writeStream.write(
-          `INSERT INTO "${tableName}" (${Object.keys(row).map(k => `"${k}"`).join(', ')}) ` +
-          `VALUES (${values.join(', ')});\n`
-        );
-      }
-    }
-
-    writeStream.end();
-    console.log(`Table ${tableName} has been backed up to ${backupFile}`);
-    console.log('Database backup completed!');
-
-  } catch (err) {
-    console.error('Error during database backup:', err);
-  } finally {
-    if (pool) {
-      await pool.end();
-    }
-  }
-}
 
 // 创建一个主函数来处理数据库备份
 async function main() {
@@ -670,7 +567,7 @@ async function main() {
       case "pg":
       case "postgres":
       case "postgresql":
-        if(process.env.TABLE_NAME){
+        if(process.env.DATABASE_NAME){
           const databaseNames = process.env.DATABASE_NAME.split(',');
           for(const databaseName of databaseNames){
             console.log(`Backuping database: ${databaseName}`);
@@ -678,7 +575,7 @@ async function main() {
             console.log(`Backuping database: ${databaseName} completed!`);
           }
         }else{
-          await backupPostgresAllDatabase()
+          console.error('DATABASE_NAME env must be specified');
         }
         break;
       default:
