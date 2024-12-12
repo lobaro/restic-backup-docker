@@ -43,6 +43,8 @@ ENV DATABASE_USER=""
 ENV DATABASE_PASSWORD=""
 ENV DATABASE_NAME=""
 
+ENV TZ="Asia/Shanghai"
+
 # openshift fix
 RUN mkdir /.cache && \
     chgrp -R 0 /.cache && \
