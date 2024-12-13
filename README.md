@@ -143,7 +143,7 @@ The container is set up by setting [environment variables](https://docs.docker.c
 * `OS_INTERFACE` - Optional. When using restic with OpenStack Swift container.
 * `OS_IDENTITY_API_VERSION` - Optional. When using restic with OpenStack Swift container.
   
-NEW Env For Database Dump (Only MongoDB has passed the test, other types databases have not been tested yet)
+NEW Env For Database Dump
 * `DATABASE_TYPE` - Optional. Specify the database type (mongo/mongodb/mysql/pg/postgres/postgresql). Specifying this option will enable the database backup function.
 * `DATABASE_BACKUP_TIME` - Optional. Database backup is automatically enabled within the specified time range (default 0-23)
 * `DATABASE_HOST` - Optional. Database host address
