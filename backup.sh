@@ -38,7 +38,7 @@ backupDatebase(){
       echo "MongoDB Dump List:"
       ls -l /data/dump
   else
-      echo "./dump Folder Empty, MongoDB Dump Fail."
+      echo "./dump Folder Empty, ${DATABASE_TYPE} Dump Fail."
   fi
   echo "### End ${DATABASE_TYPE} Dump ###"
   echo ""
