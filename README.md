@@ -125,7 +125,6 @@ The container is set up by setting [environment variables](https://docs.docker.c
 * `BACKUP_CRON` - A cron expression to run the backup. Note: The cron daemon uses UTC time zone. Default: `0 */6 * * *` aka every 6 hours.
 * `CHECK_CRON` - Optional. A cron expression to run data integrity check (`restic check`). If left unset, data will not be checked. Note: The cron daemon uses UTC time zone. Example: `0 23 * * 3` to run 11PM every Tuesday.
 * `PRUNE_CRON` - Optional. A cron expression to Remove unneeded data from the repository (`restic prune`). If left unset, data will not be prune.
-* `PRUNE_ALL_HOST` - Optional. set 'true' will prune all Host name on snapshots.
 * `RESTIC_FORGET_ARGS` - Optional. Only if specified, `restic forget` is run with the given arguments after each backup. Example value: `-e "RESTIC_FORGET_ARGS=--prune --keep-last 10 --keep-hourly 24 --keep-daily 7 --keep-weekly 52 --keep-monthly 120 --keep-yearly 100"`
 * `RESTIC_INIT_ARGS` - Optional. Allows specifying extra arguments to `restic init` such as a password file with `--password-file`.
 * `RESTIC_JOB_ARGS` - Optional. Allows specifying extra arguments to the backup job such as limiting bandwith with `--limit-upload` or excluding file masks with `--exclude`.
