@@ -32,10 +32,6 @@ logLast "AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}"
 
 if [ -n "${RESTIC_FORGET_ARGS}" ]; then
     echo "Prune about old snapshots based on RESTIC_FORGET_ARGS = ${RESTIC_FORGET_ARGS}"
-    # use keep-tag $(hostname) for forget all snapshots that name not with $(hostname)
-    if [ "${PRUNE_ALL_HOST}" = "true" ]; then
-      restic forget --prune ${RESTIC_FORGET_ARGS} --keep-tag $(hostname) >> ${lastLogfile} 2>&1
-    fi
     restic forget --prune ${RESTIC_FORGET_ARGS} >> ${lastLogfile} 2>&1
     rc=$?
     logLast "Finished forget at $(date)"
