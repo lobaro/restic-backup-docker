@@ -29,7 +29,29 @@ logLast "RESTIC_REPOSITORY: ${RESTIC_REPOSITORY}"
 logLast "AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}"
 
 # Do not save full prune log to logfile but to prune-last.log
-restic prune >> ${lastLogfile} 2>&1
+
+if [ -n "${RESTIC_FORGET_ARGS}" ]; then
+    echo "Prune about old snapshots based on RESTIC_FORGET_ARGS = ${RESTIC_FORGET_ARGS}"
+    restic forget --prune ${RESTIC_FORGET_ARGS} >> ${lastLogfile} 2>&1
+    rc=$?
+    logLast "Finished forget at $(date)"
+    if [[ $rc == 0 ]]; then
+        echo "Prune Successful"
+    else
+        echo "Prune Failed with Status ${rc}"
+        restic unlock
+        copyErrorLog
+    fi
+else
+    restic prune >> ${lastLogfile} 2>&1
+    if [[ $rc == 0 ]]; then
+        echo "Prune Successful"
+    else
+        echo "Prune Failed with Status ${rc}"
+        restic unlock
+        copyErrorLog
+    fi
+fi
 pruneRC=$?
 logLast "Finished prune at $(date)"
 if [[ $pruneRC == 0 ]]; then
