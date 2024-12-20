@@ -62,8 +62,11 @@ RUN mkdir /.cache && \
 VOLUME /data
 
 COPY backup.sh /bin/backup
+RUN chmod u+x /bin/backup
 COPY check.sh /bin/check
+RUN chmod u+x /bin/check
 COPY prune.sh /bin/prune
+RUN chmod u+x /bin/prune
 COPY entry.sh /entry.sh
 
 RUN mkdir /script && \
