@@ -44,6 +44,12 @@ if [ -n "${CHECK_CRON}" ]; then
     echo "${CHECK_CRON} /usr/bin/flock -n /var/run/backup.lock /bin/check >> /var/log/cron.log 2>&1" >> /var/spool/cron/crontabs/root
 fi
 
+# If PRUNE_CRON is set we will enable automatic backup checking
+if [ -n "${PRUNE_CRON}" ]; then
+    echo "Setup check cron job with cron expression PRUNE_CRON: ${PRUNE_CRON}"
+    echo "${PRUNE_CRON} /usr/bin/flock -n /var/run/backup.lock /bin/prune >> /var/log/cron.log 2>&1" >> /var/spool/cron/crontabs/root
+fi
+
 # Make sure the file exists before we start tail
 touch /var/log/cron.log
 
