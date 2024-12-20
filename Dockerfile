@@ -63,6 +63,7 @@ VOLUME /data
 
 COPY backup.sh /bin/backup
 COPY check.sh /bin/check
+COPY prune.sh /bin/prune
 COPY entry.sh /entry.sh
 
 RUN mkdir /script && \
