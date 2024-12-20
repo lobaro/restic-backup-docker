@@ -124,6 +124,7 @@ The container is set up by setting [environment variables](https://docs.docker.c
 * `NFS_TARGET` - Optional. If set, the given NFS is mounted, i.e. `mount -o nolock -v ${NFS_TARGET} /mnt/restic`. `RESTIC_REPOSITORY` must remain its default value!
 * `BACKUP_CRON` - A cron expression to run the backup. Note: The cron daemon uses UTC time zone. Default: `0 */6 * * *` aka every 6 hours.
 * `CHECK_CRON` - Optional. A cron expression to run data integrity check (`restic check`). If left unset, data will not be checked. Note: The cron daemon uses UTC time zone. Example: `0 23 * * 3` to run 11PM every Tuesday.
+* `PRUNE_CRON` - Optional. A cron expression to Remove unneeded data from the repository (`restic prune`). If left unset, data will not be prune.
 * `RESTIC_FORGET_ARGS` - Optional. Only if specified, `restic forget` is run with the given arguments after each backup. Example value: `-e "RESTIC_FORGET_ARGS=--prune --keep-last 10 --keep-hourly 24 --keep-daily 7 --keep-weekly 52 --keep-monthly 120 --keep-yearly 100"`
 * `RESTIC_INIT_ARGS` - Optional. Allows specifying extra arguments to `restic init` such as a password file with `--password-file`.
 * `RESTIC_JOB_ARGS` - Optional. Allows specifying extra arguments to the backup job such as limiting bandwith with `--limit-upload` or excluding file masks with `--exclude`.
@@ -217,6 +218,8 @@ services:
     volumes:
       - /volume1/Backup:/data/Backup:ro               # Backup /volume1/Backup from host
       - /home/user:/data/home:ro                      # Backup /home/user from host
+      - ./post-backup.sh:/custem/post-backup.sh:ro     # For k8s file in custem folder will auto copy to hooks. Run script post-backup.sh after every backup
+      - ./post-check.sh:/custem/post-check.sh:ro       # For k8s file in custem folder will auto copy to hooks.Run script post-check.sh after every check
       - ./post-backup.sh:/hooks/post-backup.sh:ro     # Run script post-backup.sh after every backup
       - ./post-check.sh:/hooks/post-check.sh:ro       # Run script post-check.sh after every check
       - ./ssh:/root/.ssh                              # SSH keys and config so we can login to "storageserver" without password
