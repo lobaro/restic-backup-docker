@@ -12,11 +12,48 @@ logLast() {
   echo "$1" >> ${lastLogfile}
 }
 
+backupDatebase(){
+  echo ""
+  echo "### Start ${DATABASE_TYPE} Dump ###"
+  echo "Backup Datebase: ${DATABASE_TYPE}"
+  # 检查 dump 目录是否存在，如果存在则删除
+  if [ -d "/script/dump" ]; then
+      rm -rf /script/dump
+  fi
+  mkdir /script/dump
+  # 运行 dump 脚本
+  cd /script
+  npm run dump
+  # 检查 /script/dump 目录下是否为空，不为空则复制 dump 数据到
+  if [ "$(ls -A /script/dump)" ]; then
+      # 检查 /data/dump 目录存在，自动删除旧备份；如果不存在则创建 dump 目录
+      if [ -d "/data/dump" ]; then
+        rm -rf /data/dump/*
+      else
+        mkdir /data/dump
+      fi
+      # 复制最新的备份
+      cp -r /script/dump /data/
+      echo ""
+      echo "MongoDB Dump List:"
+      ls -l /data/dump
+  else
+      echo "./dump Folder Empty, ${DATABASE_TYPE} Dump Fail."
+  fi
+  echo "### End ${DATABASE_TYPE} Dump ###"
+  echo ""
+}
+
 if [ -f "/hooks/pre-backup.sh" ]; then
     echo "Starting pre-backup script ..."
     /hooks/pre-backup.sh
 else
     echo "Pre-backup script not found ..."
+fi
+
+# Dump Datebase
+if [ -n "${DATABASE_TYPE}" ]; then
+    backupDatebase
 fi
 
 start=`date +%s`

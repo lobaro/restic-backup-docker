@@ -1,0 +1,21 @@
+{
+    "name": "npmscript",
+    "version": "1.0.0",
+    "description": "A Node.js application that connects to Datebase",
+    "main": "dump.js",
+    "scripts": {
+        "start": "node dump.js",
+        "dump": "node dump.js"
+    },
+    "author": "emengweb",
+    "license": "MIT",
+    "dependencies": {
+        "moment": "^2.29.4",
+        "mongodb": "^4.10.0",
+        "mysql": "^2.18.1",
+        "mysql2": "^3.11.5",
+        "pg": "^8.8.0",
+        "pg-copy-streams": "^6.0.6",
+        "util": "^0.12.5"
+    }
+}

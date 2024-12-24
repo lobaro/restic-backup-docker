@@ -6,7 +6,7 @@ RUN unzip rclone-current-linux-amd64.zip && mv rclone-*-linux-amd64/rclone /bin/
 
 FROM restic/restic:0.16.0
 
-RUN apk add --update --no-cache curl mailx
+RUN apk add --update --no-cache curl mailx nodejs npm
 
 COPY --from=rclone /bin/rclone /bin/rclone
 
@@ -20,6 +20,7 @@ ENV RESTIC_TAG=""
 ENV NFS_TARGET=""
 ENV BACKUP_CRON="0 */6 * * *"
 ENV CHECK_CRON=""
+ENV PRUNE_CRON=""
 ENV RESTIC_INIT_ARGS=""
 ENV RESTIC_FORGET_ARGS=""
 ENV RESTIC_JOB_ARGS=""
@@ -36,6 +37,16 @@ ENV OS_REGION_NAME=""
 ENV OS_INTERFACE=""
 ENV OS_IDENTITY_API_VERSION=3
 
+ENV DATABASE_TYPE=""
+ENV DATABASE_HOST=""
+ENV DATABASE_PORT=""
+ENV DATABASE_USER=""
+ENV DATABASE_PASSWORD=""
+ENV DATABASE_NAME=""
+ENV DATABASE_BACKUP_TIME="0-23"
+
+ENV TZ="Asia/Shanghai"
+
 # openshift fix
 RUN mkdir /.cache && \
     chgrp -R 0 /.cache && \
@@ -51,8 +62,21 @@ RUN mkdir /.cache && \
 VOLUME /data
 
 COPY backup.sh /bin/backup
+RUN chmod u+x /bin/backup
 COPY check.sh /bin/check
+RUN chmod u+x /bin/check
+COPY prune.sh /bin/prune
+RUN chmod u+x /bin/prune
 COPY entry.sh /entry.sh
+
+RUN mkdir /script && \
+    chgrp -R 0 /script && \
+    chmod -R g=u /script 
+COPY package.json /script/package.json
+COPY dump.js /script/dump.js
+RUN chmod u+x /script/*
+RUN cd /script && \
+    npm install
 
 ENTRYPOINT ["/entry.sh"]
 CMD ["tail","-fn0","/var/log/cron.log"]
