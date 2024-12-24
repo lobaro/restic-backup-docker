@@ -218,8 +218,8 @@ services:
     volumes:
       - /volume1/Backup:/data/Backup:ro               # Backup /volume1/Backup from host
       - /home/user:/data/home:ro                      # Backup /home/user from host
-      - ./post-backup.sh:/custem/post-backup.sh:ro     # For k8s file in custem folder will auto copy to hooks. Run script post-backup.sh after every backup
-      - ./post-check.sh:/custem/post-check.sh:ro       # For k8s file in custem folder will auto copy to hooks.Run script post-check.sh after every check
+      - ./post-backup.sh:/custom/post-backup.sh:ro     # For k8s file in custom folder will auto copy to hooks. Run script post-backup.sh after every backup
+      - ./post-check.sh:/custom/post-check.sh:ro       # For k8s file in custom folder will auto copy to hooks.Run script post-check.sh after every check
       - ./post-backup.sh:/hooks/post-backup.sh:ro     # Run script post-backup.sh after every backup
       - ./post-check.sh:/hooks/post-check.sh:ro       # Run script post-check.sh after every check
       - ./ssh:/root/.ssh                              # SSH keys and config so we can login to "storageserver" without password
