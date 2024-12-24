@@ -2,10 +2,10 @@
 
 echo "Starting container ..."
 
-# Copy Custem Hooks Script File
-if [ -d "/custem" ]; then
+# Copy Custom Hooks Script File
+if [ -d "/custom" ]; then
   mkdir /hooks
-  cp -L /custem/* /hooks
+  cp -L /custom/* /hooks
   chmod u+x /hooks/*
   # Run npm install
   npm install
