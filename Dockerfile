@@ -1,10 +1,10 @@
-FROM alpine:latest as rclone
+FROM docker.io/alpine:latest as rclone
 
 # Get rclone executable
 ADD https://downloads.rclone.org/rclone-current-linux-arm64.zip /
 RUN unzip rclone-current-linux-arm64.zip && mv rclone-*-linux-arm64/rclone /bin/rclone && chmod +x /bin/rclone
 
-FROM restic/restic:0.18.0
+FROM docker.io/restic/restic:0.18.0
 
 RUN apk add --update --no-cache curl mailx
 
