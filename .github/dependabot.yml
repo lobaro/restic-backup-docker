@@ -5,11 +5,7 @@ updates:
   - package-ecosystem: github-actions
     directory: /
     schedule: {interval: monthly}
-    reviewers: [krombel]
-    assignees: [krombel]
 
   - package-ecosystem: docker
     directory: /
     schedule: {interval: monthly}
-    reviewers: [krombel]
-    assignees: [krombel]
