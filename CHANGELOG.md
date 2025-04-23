@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v1.4.0
+
 ### Added
 * Option to set the target folder backup
 * Multi-platform image build
