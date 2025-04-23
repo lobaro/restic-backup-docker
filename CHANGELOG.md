@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+* Option to set the target folder backup
+* Multi-platform image build
+
 ## v1.3.2 (restic 0.16.0)
 
 ### Changed

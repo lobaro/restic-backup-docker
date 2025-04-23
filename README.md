@@ -142,6 +142,7 @@ The container is set up by setting [environment variables](https://docs.docker.c
 * `OS_REGION_NAME` - Optional. When using restic with OpenStack Swift container.
 * `OS_INTERFACE` - Optional. When using restic with OpenStack Swift container.
 * `OS_IDENTITY_API_VERSION` - Optional. When using restic with OpenStack Swift container.
+* `BACKUP_SOURCES` - Optional. Set the folder that will be backed up.
 
 ## Volumes
 

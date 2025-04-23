@@ -4,6 +4,12 @@ lastLogfile="/var/log/backup-last.log"
 lastMailLogfile="/var/log/mail-last.log"
 lastMicrosoftTeamsLogfile="/var/log/microsoft-teams-last.log"
 
+if [ -n "$BACKUP_SOURCES" ]; then
+    backupSources="$BACKUP_SOURCES"
+else
+    backupSources="/data"
+fi
+
 copyErrorLog() {
   cp ${lastLogfile} /var/log/backup-error-last.log
 }
@@ -31,7 +37,7 @@ logLast "RESTIC_REPOSITORY: ${RESTIC_REPOSITORY}"
 logLast "AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}"
 
 # Do not save full backup log to logfile but to backup-last.log
-restic backup /data ${RESTIC_JOB_ARGS} --tag=${RESTIC_TAG?"Missing environment variable RESTIC_TAG"} >> ${lastLogfile} 2>&1
+restic backup ${backupSources} ${RESTIC_JOB_ARGS} --tag=${RESTIC_TAG?"Missing environment variable RESTIC_TAG"} >> ${lastLogfile} 2>&1
 backupRC=$?
 logLast "Finished backup at $(date)"
 if [[ $backupRC == 0 ]]; then
