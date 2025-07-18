@@ -15,7 +15,7 @@ RUN if [ "$TARGETPLATFORM" = "linux/amd64" ]; then \
 
 FROM docker.io/restic/restic:0.18.0
 
-RUN apk add --update --no-cache curl mailx shadow
+RUN apk add --update --no-cache bash curl docker-cli mailx shadow
 
 COPY --from=rclone /bin/rclone /bin/rclone
 
