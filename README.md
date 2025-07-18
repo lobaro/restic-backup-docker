@@ -22,7 +22,7 @@ docker pull ghcr.io/lobaro/restic-backup-docker:latest
 ```
 
 # Contributing
-Pull Requests to improve the image are always wellcome. Please create an issue about the PR first.
+Pull Requests to improve the image are always welcome. Please create an issue about the PR first.
 
 When behaviour of the image changes (Features, Bugfixes, Changes in the API) please update the "Unreleased" section of the [CHANGELOG.md](https://github.com/lobaro/restic-backup-docker/blob/master/CHANGELOG.md)
 
@@ -147,6 +147,7 @@ The container is set up by setting [environment variables](https://docs.docker.c
 ## Volumes
 
 * `/data` - This is the data that gets backed up. Just [mount](https://docs.docker.com/engine/reference/run/#volume-shared-filesystems) it to wherever you want.
+* `/var/run/docker.sock` - (optional) Mount the docker socket to interact with docker on your host (e.g. stopping containers before backing them up)
 
 ## Set the hostname
 
