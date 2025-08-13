@@ -48,8 +48,6 @@ else
     copyErrorLog
 fi
 
-forgetSuccess=false
-
 if [[ $backupRC == 0 ]] && [ -n "${RESTIC_FORGET_ARGS}" ]; then
     echo "Forget about old snapshots based on RESTIC_FORGET_ARGS = ${RESTIC_FORGET_ARGS}"
     restic forget ${RESTIC_FORGET_ARGS} >> ${lastLogfile} 2>&1
@@ -57,27 +55,8 @@ if [[ $backupRC == 0 ]] && [ -n "${RESTIC_FORGET_ARGS}" ]; then
     logLast "Finished forget at $(date)"
     if [[ $rc == 0 ]]; then
         echo "Forget Successful"
-        forgetSuccess=true
     else
         echo "Forget Failed with Status ${rc}"
-        restic unlock
-        forgetSuccess=false
-        copyErrorLog
-    fi
-fi
-
-echo "$RESTIC_FORGET_ARGS" | grep -q prune
-wasPruneRC=$?
-
-if [ "$forgetSuccess" = true ] && [ $wasPruneRC -eq 0 ]; then
-    echo "Checking repository after forget / prune"
-    restic check >> ${lastLogfile} 2>&1
-    rc=$?
-    logLast "Finished check at $(date)"
-    if [ $rc = 0 ]; then
-        echo "Check Successful"
-    else
-        echo "Check Failed with Status ${rc}"
         restic unlock
         copyErrorLog
     fi
