@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.4.2
+### Removed 
+* Execute a repository check after prune was passed as a parameter in the forget call - use RESTIC_CHECK_CRON Var instead
+
 ## v1.4.1
 ### Changed
 * Execute a repository check after prune was passed as a parameter in the forget call
