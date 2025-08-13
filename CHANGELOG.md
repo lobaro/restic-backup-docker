@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## v1.4.1
+### Changed
+* Execute a repository check after prune was passed as a parameter in the forget call
 
 ## v1.4.0
 
