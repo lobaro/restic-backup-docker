@@ -22,7 +22,7 @@ docker pull ghcr.io/lobaro/restic-backup-docker:latest
 ```
 
 # Contributing
-Pull Requests to improve the image are always wellcome. Please create an issue about the PR first.
+Pull Requests to improve the image are always welcome. Please create an issue about the PR first.
 
 When behaviour of the image changes (Features, Bugfixes, Changes in the API) please update the "Unreleased" section of the [CHANGELOG.md](https://github.com/lobaro/restic-backup-docker/blob/master/CHANGELOG.md)
 
@@ -122,8 +122,9 @@ The container is set up by setting [environment variables](https://docs.docker.c
 * `RESTIC_PASSWORD` - the password for the restic repository. Will also be used for restic init during first start when the repository is not initialized.
 * `RESTIC_TAG` - Optional. To tag the images created by the container.
 * `NFS_TARGET` - Optional. If set, the given NFS is mounted, i.e. `mount -o nolock -v ${NFS_TARGET} /mnt/restic`. `RESTIC_REPOSITORY` must remain its default value!
-* `BACKUP_CRON` - A cron expression to run the backup. Note: The cron daemon uses UTC time zone. Default: `0 */6 * * *` aka every 6 hours.
-* `CHECK_CRON` - Optional. A cron expression to run data integrity check (`restic check`). If left unset, data will not be checked. Note: The cron daemon uses UTC time zone. Example: `0 23 * * 3` to run 11PM every Tuesday.
+* `BACKUP_CRON` - A cron expression to run the backup. Note: The cron daemon uses UTC time zone by default unless you specify a timezone with `TZ`. Default: `0 */6 * * *` aka every 6 hours.
+* `CHECK_CRON` - Optional. A cron expression to run data integrity check (`restic check`). If left unset, data will not be checked. Note: The cron daemon uses UTC time zone by default unless you specify a timezone with `TZ`. Example: `0 23 * * 3` to run 11PM every Tuesday.
+* `TZ` - Optional. The timezone to use for cron expressions. Default: `UTC`. Example: `Europe/Berlin` or `America/New_York`. See [list of valid timezones](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones).
 * `RESTIC_FORGET_ARGS` - Optional. Only if specified, `restic forget` is run with the given arguments after each backup. Example value: `-e "RESTIC_FORGET_ARGS=--prune --keep-last 10 --keep-hourly 24 --keep-daily 7 --keep-weekly 52 --keep-monthly 120 --keep-yearly 100"`
 * `RESTIC_INIT_ARGS` - Optional. Allows specifying extra arguments to `restic init` such as a password file with `--password-file`.
 * `RESTIC_JOB_ARGS` - Optional. Allows specifying extra arguments to the backup job such as limiting bandwith with `--limit-upload` or excluding file masks with `--exclude`.
@@ -147,6 +148,7 @@ The container is set up by setting [environment variables](https://docs.docker.c
 ## Volumes
 
 * `/data` - This is the data that gets backed up. Just [mount](https://docs.docker.com/engine/reference/run/#volume-shared-filesystems) it to wherever you want.
+* `/var/run/docker.sock` - (optional) Mount the docker socket to interact with docker on your host (e.g. stopping containers before backing them up)
 
 ## Set the hostname
 
