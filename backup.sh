@@ -36,8 +36,19 @@ logLast "RESTIC_JOB_ARGS: ${RESTIC_JOB_ARGS}"
 logLast "RESTIC_REPOSITORY: ${RESTIC_REPOSITORY}"
 logLast "AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}"
 
+if [ -n "${RESTIC_STREAM}" ]; then
+    if [ -z "${RESTIC_STREAM_CMD}" ] || [ -z "${RESTIC_STREAM_FILENAME}" ] || [ -z "${RESTIC_TAG}" ]; then
+        echo "RESTIC_STREAM_CMD, RESTIC_STREAM_FILENAME and RESTIC_TAG variables has to be set when running in RESTIC_STREAM mode!"
+        exit 1
+    fi
+    # stream backup into repository
+    eval "$RESTIC_STREAM_CMD | restic backup --stdin --stdin-filename $RESTIC_STREAM_FILENAME --tag=$RESTIC_TAG >> $lastLogfile 2>&1"
+else
+    # Create a normal backup
+    restic backup ${backupSources} ${RESTIC_JOB_ARGS} --tag=${RESTIC_TAG?"Missing environment variable RESTIC_TAG"} >> ${lastLogfile} 2>&1
+fi
+
 # Do not save full backup log to logfile but to backup-last.log
-restic backup ${backupSources} ${RESTIC_JOB_ARGS} --tag=${RESTIC_TAG?"Missing environment variable RESTIC_TAG"} >> ${lastLogfile} 2>&1
 backupRC=$?
 logLast "Finished backup at $(date)"
 if [[ $backupRC == 0 ]]; then
