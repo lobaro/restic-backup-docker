@@ -190,7 +190,8 @@ REQUIRED_FEATURES_FILE="${REQUIRED_FEATURES_FILE:-$(dirname "${BASH_SOURCE[0]}")
 feature_is_required() {
     local feature="$1"
     [ -f "$REQUIRED_FEATURES_FILE" ] || return 1
-    grep -v '^[[:space:]]*#' "$REQUIRED_FEATURES_FILE" 2>/dev/null \
+    tr -d '\r' < "$REQUIRED_FEATURES_FILE" \
+        | grep -v '^[[:space:]]*#' \
         | grep -qx "[[:space:]]*${feature}[[:space:]]*"
 }
 
