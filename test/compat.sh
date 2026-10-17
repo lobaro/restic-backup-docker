@@ -93,6 +93,33 @@ assert_contains "$hook_log" "POST-HOOK-RAN with rc=0" \
 stop_container
 
 echo
+echo "=== compat: a corrupted repository is reported as failed ==="
+# The success path above is not enough: check.sh prints "Check Successful"
+# whenever restic exits 0, so a `restic check` that does nothing at all would
+# keep this suite green. Damage the repository and require the failure path.
+# Runs in its own throwaway container, the repository stays broken afterwards.
+
+start_container corrupt
+wait_for_start || { fail "container starts for the corruption test"; summary "compat"; exit 1; }
+write_file /data/hello.txt "backup me"
+in_container /bin/backup >/dev/null 2>&1
+assert_eq "1" "$(snapshot_count)" \
+    "the repository to be corrupted has a snapshot"
+
+in_container sh -c 'f=$(find /mnt/restic/data -type f | head -n1); chmod u+w "$f"; printf garbage > "$f"'
+broken_check_log="$(in_container /bin/check 2>&1)"
+assert_contains "$broken_check_log" "Check Failed with Status" \
+    "restic check detects a corrupted repository"
+assert_not_contains "$broken_check_log" "Check Successful" \
+    "a corrupted repository is not reported as successful"
+if in_container test -f /var/log/check-error-last.log; then
+    pass "failing check writes check-error-last.log"
+else
+    fail "failing check writes check-error-last.log" "file is missing"
+fi
+stop_container
+
+echo
 echo "=== compat: RESTIC_FORGET_ARGS ==="
 
 start_container forget -e "RESTIC_FORGET_ARGS=--keep-last 1"
