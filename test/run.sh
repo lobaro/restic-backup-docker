@@ -12,6 +12,14 @@
 
 set -u
 
+# Windows/Git-Bash: MSYS mangles POSIX-looking arguments on their way to the
+# docker daemon, which breaks `docker exec` and `--config /test/structure.yml`.
+# lib.sh exports the same two variables for the suites that source it; run.sh
+# calls docker itself and starts the suites as separate processes, so it needs
+# them as well. Both are ignored on Linux and macOS.
+export MSYS_NO_PATHCONV=1
+export MSYS2_ARG_CONV_EXCL='*'
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 IMAGE="${IMAGE:-restic-backup-docker:test}"

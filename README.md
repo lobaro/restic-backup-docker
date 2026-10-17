@@ -37,6 +37,12 @@ bash test/run.sh --no-build      # reuse an already built image
 bash test/run.sh --suite compat  # run a single suite
 ```
 
+They run unchanged on Linux, macOS and Windows/Git-Bash. On Git-Bash the
+scripts set `MSYS_NO_PATHCONV=1` and `MSYS2_ARG_CONV_EXCL='*'` themselves,
+because MSYS would otherwise rewrite container paths such as
+`/usr/bin/backup` into `C:/Program Files/Git/usr/bin/backup` before `docker`
+sees them. Nothing has to be exported by hand.
+
 There are three suites:
 
 * **compat** (`test/compat.sh`) - backup, restore, forget, check, hooks and

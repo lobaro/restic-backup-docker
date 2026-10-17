@@ -4,6 +4,15 @@
 # Deliberately dependency-free: bash + docker only. No test framework, no
 # host-side bind mounts (files are moved with `docker cp`) so the suites behave
 # identically on Linux CI runners, macOS and Windows/Git-Bash.
+#
+# Windows/Git-Bash needs one extra thing: MSYS rewrites every argument that
+# looks like a POSIX path before the process sees it, so
+# `docker exec <id> /usr/bin/backup` reaches the daemon as
+# `C:/Program Files/Git/usr/bin/backup` and the container command is not found.
+# Both variables are required (one covers the command, one covers its
+# arguments) and both are ignored on Linux and macOS.
+export MSYS_NO_PATHCONV=1
+export MSYS2_ARG_CONV_EXCL='*'
 
 IMAGE="${IMAGE:-restic-backup-docker:test}"
 
