@@ -1,0 +1,7 @@
+# Shell scripts and the Dockerfile are copied into a Linux image. With CRLF
+# line endings the shebang resolves to "/bin/sh\r" and the container fails to
+# start, which happens on Windows checkouts with core.autocrlf=true. Pin them
+# to LF so the image builds the same way on every platform.
+*.sh text eol=lf
+Dockerfile text eol=lf
+*.yml text eol=lf

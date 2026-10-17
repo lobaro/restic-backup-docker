@@ -1,0 +1,133 @@
+#!/usr/bin/env bash
+# Entry point for the test suites.
+#
+#   bash test/run.sh                 build the image and run every suite
+#   bash test/run.sh --no-build      reuse an already built $IMAGE
+#   bash test/run.sh --suite compat  run a single suite (compat|features|structure)
+#   bash test/run.sh --sabotage      self test: break backup.sh on a throwaway
+#                                    copy of the tree and prove the suite fails
+#
+# Requires bash and docker. container-structure-test is optional; the structure
+# suite is skipped when the tool is not installed.
+
+set -u
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+IMAGE="${IMAGE:-restic-backup-docker:test}"
+export IMAGE
+# Pinned by digest-free tag on purpose: the structure test tool is only used to
+# read the image under test, a floating tag cannot affect the product.
+STRUCTURE_TEST_IMAGE="${STRUCTURE_TEST_IMAGE:-gcr.io/gcp-runtimes/container-structure-test:latest}"
+
+BUILD=1
+SABOTAGE=0
+ONLY_SUITE=""
+
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --no-build) BUILD=0 ;;
+        --sabotage) SABOTAGE=1 ;;
+        --suite) ONLY_SUITE="${2:-}"; shift ;;
+        --suite=*) ONLY_SUITE="${1#--suite=}" ;;
+        -h|--help) sed -n '2,14p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+        *) echo "unknown argument: $1" >&2; exit 2 ;;
+    esac
+    shift
+done
+
+if ! docker info >/dev/null 2>&1; then
+    echo "docker is not available, cannot run the test suite" >&2
+    exit 2
+fi
+
+# Docker on Windows does not understand the /c/... paths Git-Bash produces,
+# so build contexts are translated when cygpath is around. No-op elsewhere.
+host_path() {
+    if command -v cygpath >/dev/null 2>&1; then
+        cygpath -w "$1"
+    else
+        printf '%s' "$1"
+    fi
+}
+
+build_image() {
+    local context tag
+    context="$(host_path "$1")"
+    tag="$2"
+    echo ">>> building ${tag}"
+    if ! docker build --quiet -t "$tag" "$context" >/dev/null; then
+        echo "image build failed" >&2
+        return 1
+    fi
+}
+
+# --sabotage proves the suite has teeth: it breaks the backup call on a copy of
+# the tree and expects the compat suite to go red. If this mode ever passes,
+# the tests are not actually testing anything.
+if [ "$SABOTAGE" -eq 1 ]; then
+    tmp="$(mktemp -d)"
+    trap 'rm -rf "$tmp"; docker rmi -f restic-backup-docker:sabotage >/dev/null 2>&1 || true' EXIT
+    tar -c -C "$ROOT_DIR" --exclude=.git --exclude=.intent . | tar -x -C "$tmp"
+    # Silently turn the backup into a no-op, the nastiest kind of regression.
+    sed -i 's|^restic backup |true |' "$tmp/backup.sh"
+    if ! grep -q '^true ' "$tmp/backup.sh"; then
+        echo "sabotage patch did not apply, backup.sh changed shape" >&2
+        exit 2
+    fi
+    build_image "$tmp" restic-backup-docker:sabotage || exit 2
+    echo ">>> running compat suite against the sabotaged image (failure expected)"
+    if IMAGE=restic-backup-docker:sabotage bash "${SCRIPT_DIR}/compat.sh"; then
+        echo
+        echo "SABOTAGE CHECK FAILED: the compat suite passed on a broken image" >&2
+        exit 1
+    fi
+    echo
+    echo "sabotage check ok: the compat suite detects a broken backup"
+    exit 0
+fi
+
+if [ "$BUILD" -eq 1 ]; then
+    build_image "$ROOT_DIR" "$IMAGE" || exit 2
+fi
+
+rc=0
+
+run_structure() {
+    echo
+    echo ">>> structure suite"
+    if command -v container-structure-test >/dev/null 2>&1; then
+        container-structure-test test --image "$IMAGE" --config "${SCRIPT_DIR}/structure.yml" || rc=1
+    else
+        # Not installed locally: fall back to the official image. It needs the
+        # docker socket because it inspects and runs the image under test.
+        echo "container-structure-test not installed, using the official image"
+        docker run --rm \
+            -v //var/run/docker.sock:/var/run/docker.sock \
+            -v "$(host_path "${SCRIPT_DIR}")":/test \
+            "$STRUCTURE_TEST_IMAGE" \
+            test --image "$IMAGE" --config /test/structure.yml || rc=1
+    fi
+}
+
+run_suite() {
+    echo
+    echo ">>> $1 suite"
+    bash "${SCRIPT_DIR}/$1.sh" || rc=1
+}
+
+case "$ONLY_SUITE" in
+    "")          run_structure; run_suite compat; run_suite features ;;
+    structure)   run_structure ;;
+    compat)      run_suite compat ;;
+    features)    run_suite features ;;
+    *) echo "unknown suite: ${ONLY_SUITE}" >&2; exit 2 ;;
+esac
+
+echo
+if [ "$rc" -eq 0 ]; then
+    echo "all suites passed"
+else
+    echo "at least one suite failed"
+fi
+exit "$rc"

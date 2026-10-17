@@ -1,0 +1,54 @@
+name: Test
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  shellcheck:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install shellcheck
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq shellcheck
+
+      # The test scripts are new, so they are held to a clean bill of health.
+      - name: Run shellcheck on the test scripts
+        run: shellcheck --severity=warning test/*.sh
+
+      # The image scripts declare #!/bin/sh but use a few bash constructs that
+      # busybox ash happens to accept. Cleaning that up is a separate change,
+      # so this step reports but does not block.
+      - name: Run shellcheck on the image scripts
+        run: |
+          shellcheck --severity=warning backup.sh check.sh entry.sh build.sh run.sh \
+            || echo "::warning::shellcheck reported findings in the image scripts, see the log above"
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build test image
+        run: docker build -t restic-backup-docker:test .
+
+      - name: Install container-structure-test
+        run: |
+          curl -fsSL -o /usr/local/bin/container-structure-test \
+            https://storage.googleapis.com/container-structure-test/v1.19.3/container-structure-test-linux-amd64
+          chmod +x /usr/local/bin/container-structure-test
+
+      - name: Run test suites
+        run: bash test/run.sh --no-build
+
+      # Guards the guard: if someone waters the suites down until a broken
+      # backup no longer fails them, this step turns red.
+      - name: Verify the suite detects a broken backup
+        run: bash test/run.sh --sabotage

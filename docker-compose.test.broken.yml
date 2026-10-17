@@ -1,9 +1,0 @@
-version: '2'
-
-services:
-  sut:
-    image: gcr.io/gcp-runtimes/container-structure-test
-    command: ["test", "--image", "restic-backup", "--config", "config.yml"]
-    volumes:
-      - ./config.yml:/config.yml
-      - /var/run/docker.sock:/var/run/docker.sock
