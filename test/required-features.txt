@@ -1,0 +1,18 @@
+# Optional features that MUST be present in the built image.
+#
+# One gate name per line. Known gates and the pull request that introduces
+# them (see test/features.sh):
+#
+#   stream       stream backups via RESTIC_STREAM            PR #109
+#   docker-cli   docker cli inside the container             PR #99
+#   bash         bash for pre/post hooks                     PR #99
+#   msmtp        mail relay via msmtp                        PR #84
+#
+# While a gate is NOT listed here its tests are reported as SKIP when the
+# feature is absent, so an open pull request does not turn master red.
+#
+# When you merge a feature, add its gate name below. From then on the feature
+# tests are mandatory and a feature that silently disappears from the image
+# fails the build.
+#
+# Empty on purpose: master currently ships none of the optional features.
