@@ -134,6 +134,30 @@ assert_eq "1" "$(snapshot_count)" \
 stop_container
 
 echo
+echo "=== compat: RESTIC_JOB_ARGS ==="
+# backup-last.log only records the variable, it does not prove restic ever saw
+# it. The arguments have to have a visible effect, otherwise a backup that
+# silently drops RESTIC_JOB_ARGS still looks healthy.
+
+start_container jobargs -e "RESTIC_JOB_ARGS=--exclude=/data/skipme.txt"
+wait_for_start || { fail "container starts with RESTIC_JOB_ARGS"; summary "compat"; exit 1; }
+write_file /data/keep.txt "keep"
+write_file /data/skipme.txt "skip"
+jobargs_log="$(in_container /bin/backup 2>&1)"
+assert_contains "$jobargs_log" "Backup Successful" \
+    "backup with RESTIC_JOB_ARGS succeeds"
+in_container restic restore latest --target /tmp/restore >/dev/null 2>&1
+assert_eq "keep" "$(in_container cat /tmp/restore/data/keep.txt 2>&1)" \
+    "RESTIC_JOB_ARGS does not break a normal backup"
+if in_container test -f /tmp/restore/data/skipme.txt; then
+    fail "RESTIC_JOB_ARGS is passed to restic backup" \
+        "the excluded file was backed up anyway"
+else
+    pass "RESTIC_JOB_ARGS is passed to restic backup"
+fi
+stop_container
+
+echo
 echo "=== compat: BACKUP_SOURCES ==="
 
 start_container sources -e "BACKUP_SOURCES=/opt/custom"

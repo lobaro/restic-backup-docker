@@ -40,6 +40,24 @@ if require_feature stream "PR #109"; then
     fi
     stop_container
 
+    # Blocker 1 of PR #109: the stream branch must honour RESTIC_JOB_ARGS, the
+    # same way the file backup does. --host is used because it is visible in
+    # the snapshot metadata of a stdin backup.
+    start_container stream-jobargs \
+        -e RESTIC_STREAM=1 \
+        -e "RESTIC_STREAM_CMD=echo hello-stream" \
+        -e RESTIC_STREAM_FILENAME=stream.txt \
+        -e "RESTIC_JOB_ARGS=--host=jobargshost"
+    if wait_for_start; then
+        in_container /bin/backup >/dev/null 2>&1
+        stream_snapshots="$(in_container restic snapshots --json 2>/dev/null)"
+        assert_contains "$stream_snapshots" '"jobargshost"' \
+            "RESTIC_JOB_ARGS is passed to the stream backup"
+    else
+        fail "stream RESTIC_JOB_ARGS container starts"
+    fi
+    stop_container
+
     # A half-configured stream must not look like a successful backup.
     start_container stream-misconfigured -e RESTIC_STREAM=1
     if wait_for_start; then
