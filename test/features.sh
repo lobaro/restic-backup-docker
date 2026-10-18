@@ -50,9 +50,16 @@ if require_feature stream "PR #109"; then
         -e "RESTIC_JOB_ARGS=--host=jobargshost"
     if wait_for_start; then
         in_container /bin/backup >/dev/null 2>&1
-        stream_snapshots="$(in_container restic snapshots --json 2>/dev/null)"
-        assert_contains "$stream_snapshots" '"jobargshost"' \
-            "RESTIC_JOB_ARGS is passed to the stream backup"
+        # Match on the hostname field itself: restic's own --host filter only
+        # returns snapshots whose hostname equals the value, so the string
+        # cannot be satisfied by "jobargshost" appearing in some other field.
+        # Both directions are checked so the filter is known to discriminate.
+        assert_eq "1" "$(in_container sh -c \
+            'restic snapshots --host jobargshost --json 2>/dev/null | grep -o "\"short_id\"" | wc -l' | tr -d ' \r')" \
+            "RESTIC_JOB_ARGS sets the host of the stream backup snapshot"
+        assert_eq "0" "$(in_container sh -c \
+            'restic snapshots --host some-other-host --json 2>/dev/null | grep -o "\"short_id\"" | wc -l' | tr -d ' \r')" \
+            "the host filter does not match an unrelated hostname"
     else
         fail "stream RESTIC_JOB_ARGS container starts"
     fi
