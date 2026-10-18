@@ -218,9 +218,9 @@ echo "=== compat: failure handling ==="
 start_container failure
 wait_for_start || { fail "container starts for failure test"; summary "compat"; exit 1; }
 write_file /data/hello.txt "backup me"
-# Point the run at a repository that does not exist. Deleting files inside the
-# repository is not enough, restic happily recreates its directory structure.
-fail_log="$(in_container_env RESTIC_REPOSITORY=/mnt/does-not-exist /bin/backup 2>&1)"
+# Back up a source that does not exist. The repository stays the initialised
+# default one, so the snapshot count below looks at the repo the run really used.
+fail_log="$(in_container_env BACKUP_SOURCES=/does-not-exist /bin/backup 2>&1)"
 assert_contains "$fail_log" "Backup Failed with Status" \
     "a failing backup is reported as failed"
 if in_container test -f /var/log/backup-error-last.log; then
