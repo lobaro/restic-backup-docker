@@ -1,0 +1,10 @@
+name: tmp-proof-ok
+on:
+  workflow_call:
+permissions:
+  contents: read
+jobs:
+  t:
+    runs-on: ubuntu-latest
+    steps:
+      - run: true
