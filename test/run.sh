@@ -94,11 +94,26 @@ if [ "$SABOTAGE" -eq 1 ]; then
     fi
     build_image "$tmp" restic-backup-docker:sabotage || exit 2
     echo ">>> running compat suite against the sabotaged image (failure expected)"
-    if IMAGE=restic-backup-docker:sabotage bash "${SCRIPT_DIR}/compat.sh"; then
+    sabotage_log="${tmp}/compat.log"
+    if IMAGE=restic-backup-docker:sabotage bash "${SCRIPT_DIR}/compat.sh" > "$sabotage_log" 2>&1; then
+        cat "$sabotage_log"
         echo
         echo "SABOTAGE CHECK FAILED: the compat suite passed on a broken image" >&2
         exit 1
     fi
+    cat "$sabotage_log"
+    # Any red test would do for "it failed"; a broken test environment is red too.
+    # Demand the assertions that are about the backup itself.
+    missing=0
+    for name in \
+        "exactly one snapshot exists after one backup" \
+        "a second backup adds a second snapshot"; do
+        if ! grep -qF "FAIL ${name}" "$sabotage_log"; then
+            echo "SABOTAGE CHECK FAILED: expected assertion did not fail: ${name}" >&2
+            missing=1
+        fi
+    done
+    [ "$missing" -eq 0 ] || exit 1
     echo
     echo "sabotage check ok: the compat suite detects a broken backup"
     exit 0
