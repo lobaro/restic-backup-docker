@@ -134,11 +134,18 @@ run_structure() {
         # Not installed locally: fall back to the official image. It needs the
         # docker socket because it inspects and runs the image under test.
         echo "container-structure-test not installed, using the official image"
-        docker run --rm \
+        # The config file is copied in with `docker cp` instead of bind mounted,
+        # so this also works when DOCKER_HOST points at a remote daemon.
+        local tool_cid tool_rc
+        tool_cid="$(docker create \
             -v //var/run/docker.sock:/var/run/docker.sock \
-            -v "$(host_path "${SCRIPT_DIR}")":/test \
             "$STRUCTURE_TEST_IMAGE" \
-            test --image "$IMAGE" --config /test/structure.yml || rc=1
+            test --image "$IMAGE" --config /structure.yml)" || { rc=1; return; }
+        docker cp "$(host_path "${SCRIPT_DIR}")/structure.yml" "${tool_cid}:/structure.yml" \
+            && docker start -a "$tool_cid"
+        tool_rc=$?
+        docker rm -f "$tool_cid" >/dev/null 2>&1 || true
+        [ "$tool_rc" -eq 0 ] || rc=1
     fi
 }
 
