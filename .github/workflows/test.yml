@@ -1,11 +1,12 @@
 name: Test
 
+# Pull requests run this workflow directly. Pushes to master and v*.*.* tags run
+# it as the gate of docker-publish.yml (workflow_call), so the suite runs exactly
+# once per event and an image is never published without it.
 on:
-  push:
-    branches: [ "master" ]
-    tags: [ "v*.*.*" ]
   pull_request:
     branches: [ "master" ]
+  workflow_call:
 
 permissions:
   contents: read
