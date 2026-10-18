@@ -36,8 +36,15 @@ while [ $# -gt 0 ]; do
     case "$1" in
         --no-build) BUILD=0 ;;
         --sabotage) SABOTAGE=1 ;;
-        --suite) ONLY_SUITE="${2:-}"; shift ;;
-        --suite=*) ONLY_SUITE="${1#--suite=}" ;;
+        --suite)
+            # A missing value, or a following flag, must not be taken as one.
+            case "${2:-}" in
+                ""|-*) echo "--suite requires a value (compat|features|structure)" >&2; exit 2 ;;
+            esac
+            ONLY_SUITE="$2"; shift ;;
+        --suite=*)
+            ONLY_SUITE="${1#--suite=}"
+            [ -n "$ONLY_SUITE" ] || { echo "--suite requires a value (compat|features|structure)" >&2; exit 2; } ;;
         -h|--help) sed -n '2,14p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
         *) echo "unknown argument: $1" >&2; exit 2 ;;
     esac
