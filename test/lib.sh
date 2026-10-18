@@ -176,9 +176,16 @@ write_file() {
 }
 
 # snapshot_count -> number of snapshots in the repository
+# A restic error (wrong password, missing repository) is not "zero snapshots":
+# the function prints the error text and returns 1, so assert_eq on the result
+# fails loudly instead of matching an expected "0".
 snapshot_count() {
-    docker exec "$CONTAINER" sh -c \
-        'restic snapshots --json 2>/dev/null | grep -o "\"short_id\"" | wc -l' | tr -d ' \r'
+    local out
+    if ! out="$(docker exec "$CONTAINER" restic snapshots --json 2>&1)"; then
+        echo "restic snapshots failed: $(echo "$out" | tail -n 3 | tr '\n\r' '  ')"
+        return 1
+    fi
+    printf '%s' "$out" | grep -o '"short_id"' | wc -l | tr -d ' \r'
 }
 
 # ---------------------------------------------------------------------------
