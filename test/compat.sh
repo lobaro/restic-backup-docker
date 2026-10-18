@@ -52,6 +52,9 @@ assert_contains "$snapshots" '"testtag"' \
     "snapshot carries the configured RESTIC_TAG"
 
 in_container restic restore latest --target /tmp/restore >/dev/null 2>&1
+restore_rc=$?
+assert_eq "0" "$restore_rc" \
+    "restic restore of the latest snapshot exits 0"
 restored="$(in_container cat /tmp/restore/data/hello.txt 2>&1)"
 assert_eq "backup me" "$restored" \
     "restored file content matches the original"
