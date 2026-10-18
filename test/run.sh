@@ -7,8 +7,8 @@
 #   bash test/run.sh --sabotage      self test: break backup.sh on a throwaway
 #                                    copy of the tree and prove the suite fails
 #
-# Requires bash and docker. container-structure-test is optional; the structure
-# suite is skipped when the tool is not installed.
+# Requires bash and docker. container-structure-test is optional: without a
+# local install the structure suite runs through the official tool image.
 
 set -u
 
