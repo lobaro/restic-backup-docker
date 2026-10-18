@@ -211,24 +211,28 @@ feature_is_required() {
         | grep -qx "[[:space:]]*${feature}[[:space:]]*"
 }
 
+# One throwaway container probes the image for all features at once; the
+# result is cached so every has_feature call after the first is free.
+FEATURE_PROBE=""
+FEATURE_PROBED=0
+
+probe_features() {
+    [ "$FEATURE_PROBED" -eq 0 ] || return 0
+    FEATURE_PROBE="$(docker run --rm --entrypoint sh "$IMAGE" -c '
+        grep -q RESTIC_STREAM /bin/backup && echo stream
+        command -v docker >/dev/null && echo docker-cli
+        command -v bash >/dev/null && echo bash
+        command -v msmtp >/dev/null && echo msmtp
+        true' 2>/dev/null | tr -d '\r')"
+    FEATURE_PROBED=1
+}
+
 # has_feature <name> - detection runs against the built image, not the source
 has_feature() {
     case "$1" in
-        stream)
-            docker run --rm --entrypoint sh "$IMAGE" -c \
-                'grep -q RESTIC_STREAM /bin/backup' >/dev/null 2>&1
-            ;;
-        docker-cli)
-            docker run --rm --entrypoint sh "$IMAGE" -c \
-                'command -v docker' >/dev/null 2>&1
-            ;;
-        bash)
-            docker run --rm --entrypoint sh "$IMAGE" -c \
-                'command -v bash' >/dev/null 2>&1
-            ;;
-        msmtp)
-            docker run --rm --entrypoint sh "$IMAGE" -c \
-                'command -v msmtp' >/dev/null 2>&1
+        stream|docker-cli|bash|msmtp)
+            probe_features
+            printf '%s\n' "$FEATURE_PROBE" | grep -qx "$1"
             ;;
         *)
             echo "unknown feature: $1" >&2
