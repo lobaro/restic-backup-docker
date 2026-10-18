@@ -88,8 +88,14 @@ if [ "$SABOTAGE" -eq 1 ]; then
     # No `sed -i`: its argument differs between GNU and BSD (macOS) sed.
     sed 's|^restic backup |true |' "$tmp/backup.sh" > "$tmp/backup.sh.new" \
         && mv "$tmp/backup.sh.new" "$tmp/backup.sh"
+    # mv keeps the mode of the new file (644); Dockerfile COPY has no chmod.
+    chmod +x "$tmp/backup.sh"
     if ! grep -q '^true ' "$tmp/backup.sh"; then
         echo "sabotage patch did not apply, backup.sh changed shape" >&2
+        exit 2
+    fi
+    if [ ! -x "$tmp/backup.sh" ]; then
+        echo "SABOTAGE CHECK INVALID: sabotaged backup.sh is not executable" >&2
         exit 2
     fi
     build_image "$tmp" restic-backup-docker:sabotage || exit 2
@@ -102,6 +108,11 @@ if [ "$SABOTAGE" -eq 1 ]; then
         exit 1
     fi
     cat "$sabotage_log"
+    # Red for the wrong reason (e.g. a non-executable /bin/backup) proves nothing.
+    if grep -qi 'permission denied' "$sabotage_log"; then
+        echo "SABOTAGE CHECK INVALID: log contains 'permission denied', suite failed for the wrong reason" >&2
+        exit 2
+    fi
     # Any red test would do for "it failed"; a broken test environment is red too.
     # Demand the assertions that are about the backup itself.
     missing=0
