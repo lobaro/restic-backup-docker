@@ -85,7 +85,9 @@ if [ "$SABOTAGE" -eq 1 ]; then
     trap 'rm -rf "$tmp"; docker rmi -f restic-backup-docker:sabotage >/dev/null 2>&1 || true' EXIT
     tar -c -C "$ROOT_DIR" --exclude=.git --exclude=.intent . | tar -x -C "$tmp"
     # Silently turn the backup into a no-op, the nastiest kind of regression.
-    sed -i 's|^restic backup |true |' "$tmp/backup.sh"
+    # No `sed -i`: its argument differs between GNU and BSD (macOS) sed.
+    sed 's|^restic backup |true |' "$tmp/backup.sh" > "$tmp/backup.sh.new" \
+        && mv "$tmp/backup.sh.new" "$tmp/backup.sh"
     if ! grep -q '^true ' "$tmp/backup.sh"; then
         echo "sabotage patch did not apply, backup.sh changed shape" >&2
         exit 2
