@@ -93,6 +93,40 @@ assert_contains "$hook_log" "POST-HOOK-RAN with rc=0" \
 stop_container
 
 echo
+echo "=== compat: CHECK_CRON and check hooks ==="
+
+start_container checkcron -e "CHECK_CRON=0 0 31 2 *"
+wait_for_start || { fail "container starts with CHECK_CRON"; summary "compat"; exit 1; }
+
+check_crontab="$(in_container cat /var/spool/cron/crontabs/root)"
+check_cron_line="$(echo "$check_crontab" | grep '/bin/check' || true)"
+assert_contains "$check_cron_line" "flock -n /var/run/backup.lock" \
+    "check cron job is guarded by the shared backup lock"
+assert_contains "$check_cron_line" "/bin/check" \
+    "CHECK_CRON adds a check cron job to the crontab"
+assert_eq "2" "$(echo "$check_crontab" | grep -c .)" \
+    "crontab has a backup line and a check line"
+assert_contains "$(echo "$check_crontab" | head -n1)" "/bin/backup" \
+    "CHECK_CRON does not replace the backup cron job"
+
+write_file /data/hello.txt "backup me"
+in_container /bin/backup >/dev/null 2>&1
+write_file /hooks/pre-check.sh '#!/bin/sh
+echo "PRE-CHECK-HOOK-RAN"
+'
+write_file /hooks/post-check.sh '#!/bin/sh
+echo "POST-CHECK-HOOK-RAN with rc=$1"
+'
+in_container chmod +x /hooks/pre-check.sh /hooks/post-check.sh
+
+check_hook_log="$(in_container /bin/check 2>&1)"
+assert_contains "$check_hook_log" "PRE-CHECK-HOOK-RAN" \
+    "pre-check hook is executed"
+assert_contains "$check_hook_log" "POST-CHECK-HOOK-RAN with rc=0" \
+    "post-check hook receives the check return code"
+stop_container
+
+echo
 echo "=== compat: a corrupted repository is reported as failed ==="
 # The success path above is not enough: check.sh prints "Check Successful"
 # whenever restic exits 0, so a `restic check` that does nothing at all would
