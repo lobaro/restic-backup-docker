@@ -45,7 +45,7 @@ while [ $# -gt 0 ]; do
         --suite=*)
             ONLY_SUITE="${1#--suite=}"
             [ -n "$ONLY_SUITE" ] || { echo "--suite requires a value (compat|features|structure)" >&2; exit 2; } ;;
-        -h|--help) sed -n '2,14p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+        -h|--help) sed -n '2,/^$/{/^#/p;}' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
         *) echo "unknown argument: $1" >&2; exit 2 ;;
     esac
     shift
