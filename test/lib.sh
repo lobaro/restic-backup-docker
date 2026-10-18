@@ -128,6 +128,34 @@ start_container() {
         "$IMAGE" >/dev/null
 }
 
+# start_container_with_file <name suffix> <path in container> <content> [extra docker run args...]
+# Like start_container, but the file exists before entry.sh runs, so tests can
+# cover what the entrypoint does with it at real container startup. The file is
+# placed with `docker create` + `docker cp`, no bind mount.
+start_container_with_file() {
+    local suffix="$1" path="$2" content="$3"
+    shift 3
+    local seed seed_src
+    seed="$(mktemp -d)"
+    printf '%s' "$content" > "${seed}/$(basename "$path")"
+    CONTAINER="rbd-test-${suffix}-$$"
+    docker rm -f "$CONTAINER" >/dev/null 2>&1 || true
+    docker create --name "$CONTAINER" \
+        -e RESTIC_PASSWORD=testpassword \
+        -e RESTIC_TAG=testtag \
+        -e "BACKUP_CRON=0 0 31 2 *" \
+        "$@" \
+        "$IMAGE" >/dev/null
+    if command -v cygpath >/dev/null 2>&1; then
+        seed_src="$(cygpath -w "$seed")"
+    else
+        seed_src="$seed"
+    fi
+    docker cp "${seed_src}/." "${CONTAINER}:$(dirname "$path")"
+    rm -rf "$seed"
+    docker start "$CONTAINER" >/dev/null
+}
+
 stop_container() {
     [ -n "$CONTAINER" ] || return 0
     docker rm -f "$CONTAINER" >/dev/null 2>&1 || true

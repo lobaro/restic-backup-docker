@@ -133,13 +133,13 @@ if require_feature msmtp "PR #84"; then
     assert_contains "$sendmail_target" "msmtp" \
         "sendmail is provided by msmtp"
 
-    start_container msmtp-config
-    if wait_for_start; then
-        write_file /config/msmtprc 'defaults
+    # The config has to be in place when the container starts, entry.sh copies
+    # it. Re-running entry.sh in a live container would start a second crond.
+    start_container_with_file msmtp-config /config/msmtprc 'defaults
 account default
 host localhost
 '
-        in_container /entry.sh true >/dev/null 2>&1
+    if wait_for_start; then
         if in_container test -f /etc/msmtprc; then
             pass "msmtp config from /config is copied to /etc/msmtprc"
             mode="$(in_container stat -c '%a' /etc/msmtprc 2>&1 | tr -d '\r')"
