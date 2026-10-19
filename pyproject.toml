@@ -20,6 +20,7 @@ default-groups = ["dev"]
 testpaths = ["tests"]
 addopts = "-ra --strict-markers"
 markers = [
+    "container(suffix, **env): container a test class runs against, with extra environment",
     "feature(name): test needs an optional image feature; skipped when absent, failed when listed in tests/required-features.txt",
 ]
 

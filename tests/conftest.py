@@ -7,11 +7,12 @@ import os
 import signal
 import subprocess
 import uuid
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from pathlib import Path
 
 import docker
 import pytest
+from helpers import Container, remove_quietly, start_container
 
 ROOT = Path(__file__).resolve().parent.parent
 IMAGE = os.environ.get("IMAGE", "restic-backup-docker:test")
@@ -135,3 +136,25 @@ def _feature_gate(request: pytest.FixtureRequest, detected_features: set[str]) -
                 pytrace=False,
             )
         pytest.skip(f"feature '{name}' not in image yet")
+
+
+LABELS = {"rbd-test-run": RUN_ID}
+
+
+@pytest.fixture(scope="session")
+def run_container(
+    docker_client: docker.DockerClient, image: str
+) -> Callable[..., contextlib.AbstractContextManager[Container]]:
+    """Factory: `with run_container("name", env={...}) as c:` starts, waits, always removes."""
+
+    @contextlib.contextmanager
+    def _run(suffix: str, env: dict[str, str] | None = None) -> Iterator[Container]:
+        container = start_container(
+            docker_client, image, f"rbd-test-{suffix}-{RUN_ID}", LABELS, env
+        )
+        try:
+            yield container
+        finally:
+            remove_quietly(container)
+
+    return _run
