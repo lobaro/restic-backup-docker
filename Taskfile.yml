@@ -32,9 +32,9 @@ tasks:
       - task: test:features
 
   test:structure:
-    desc: Run container-structure-test against the image
+    desc: Run container-structure-test against the image and remove its containers and volumes
     cmds:
-      - container-structure-test test --image {{.IMAGE}} --config test/structure.yml
+      - uv run python tests/structure.py
 
   test:compat:
     desc: Run the compat tests
