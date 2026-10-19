@@ -38,6 +38,15 @@ def required_features() -> set[str]:
     return {line for line in lines if line and not line.startswith("#")}
 
 
+def _raise_interrupt(signum: int, _frame: object) -> None:
+    raise KeyboardInterrupt(f"received {signal.Signals(signum).name}")
+
+
+def pytest_configure(config: pytest.Config) -> None:
+    """Turn SIGTERM into KeyboardInterrupt so session teardown (cleanup) runs."""
+    signal.signal(signal.SIGTERM, _raise_interrupt)
+
+
 def pytest_addoption(parser: pytest.Parser) -> None:
     parser.addoption("--build", action="store_true", help="build the image before testing")
 
