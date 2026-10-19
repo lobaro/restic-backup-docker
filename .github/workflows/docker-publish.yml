@@ -21,8 +21,20 @@ env:
 
 
 jobs:
-  build:
+  # Publish gate: the test suite must pass before an image is built and pushed
+  # on master or a release tag. Pull requests already run test.yml directly and
+  # only build here without pushing, so the suite is skipped for them.
+  tests:
+    if: github.event_name != 'pull_request'
+    permissions:
+      contents: read
+    uses: ./.github/workflows/test.yml
 
+  build:
+    needs: tests
+    # A skipped `tests` job (pull requests) would skip `build` as well, hence
+    # the explicit condition. Failed or cancelled tests never publish.
+    if: ${{ !cancelled() && (github.event_name == 'pull_request' || needs.tests.result == 'success') }}
     runs-on: ubuntu-latest
     permissions:
       contents: read

@@ -1,0 +1,64 @@
+schemaVersion: '2.0.0'
+
+# Structural contract of the image. Everything asserted here is something a
+# user can reach from outside: a binary they call from a hook, a path they
+# mount, or the way the container is started.
+
+commandTests:
+  - name: 'restic is installed'
+    command: 'restic'
+    args: ['version']
+    expectedOutput: ['restic \d+\.\d+\.\d+.*']
+  - name: 'rclone is installed'
+    command: 'rclone'
+    args: ['--version']
+    expectedOutput: ['rclone v.*']
+  - name: 'curl is installed, used for Teams notifications'
+    command: 'curl'
+    args: ['--version']
+    expectedOutput: ['curl \d+\..*']
+  - name: 'mail is installed, used for mail notifications'
+    command: 'sh'
+    args: ['-c', 'command -v mail']
+    expectedOutput: ['/usr/bin/mail']
+  - name: 'crond is available'
+    command: 'sh'
+    args: ['-c', 'command -v crond']
+    expectedOutput: ['/usr/sbin/crond']
+  - name: 'flock is available, the cron jobs depend on it'
+    command: 'sh'
+    args: ['-c', 'test -x /usr/bin/flock && echo ok']
+    expectedOutput: ['ok']
+
+fileExistenceTests:
+  - name: 'backup script'
+    path: '/bin/backup'
+    shouldExist: true
+    permissions: '-rwxr-xr-x'
+  - name: 'check script'
+    path: '/bin/check'
+    shouldExist: true
+    permissions: '-rwxr-xr-x'
+  - name: 'entrypoint'
+    path: '/entry.sh'
+    shouldExist: true
+    permissions: '-rwxr-xr-x'
+  - name: 'default repository mount point'
+    path: '/mnt/restic'
+    shouldExist: true
+  - name: 'cron log file'
+    path: '/var/log/cron.log'
+    shouldExist: true
+  - name: 'crontab directory'
+    path: '/var/spool/cron/crontabs'
+    shouldExist: true
+
+metadataTest:
+  volumes: ['/data']
+  entrypoint: ['/entry.sh']
+  cmd: ['tail', '-fn0', '/var/log/cron.log']
+  envVars:
+    - key: 'RESTIC_REPOSITORY'
+      value: '/mnt/restic'
+    - key: 'BACKUP_CRON'
+      value: '0 */6 * * *'

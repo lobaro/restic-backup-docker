@@ -26,6 +26,45 @@ Pull Requests to improve the image are always wellcome. Please create an issue a
 
 When behaviour of the image changes (Features, Bugfixes, Changes in the API) please update the "Unreleased" section of the [CHANGELOG.md](https://github.com/lobaro/restic-backup-docker/blob/master/CHANGELOG.md)
 
+## Tests
+
+The test suites build the image and exercise it as a real container. They need
+`bash` and `docker`, nothing else:
+
+```sh
+bash test/run.sh                 # build the image and run every suite
+bash test/run.sh --no-build      # reuse an already built image
+bash test/run.sh --suite compat  # run a single suite
+```
+
+They run unchanged on Linux, macOS and Windows/Git-Bash. On Git-Bash the
+scripts set `MSYS_NO_PATHCONV=1` and `MSYS2_ARG_CONV_EXCL='*'` themselves,
+because MSYS would otherwise rewrite container paths such as
+`/usr/bin/backup` into `C:/Program Files/Git/usr/bin/backup` before `docker`
+sees them. Nothing has to be exported by hand.
+
+There are three suites:
+
+* **compat** (`test/compat.sh`) - backup, restore, forget, check, hooks and
+  failure handling against the default configuration. These tests describe the
+  behaviour users rely on. A change that turns one of them red is a breaking
+  change.
+* **features** (`test/features.sh`) - tests for optional features. Each block
+  is guarded by a detection check against the built image, so a feature that is
+  not part of the image is reported as `SKIP` instead of failing. Pull requests
+  that add such a feature are therefore covered as soon as they are rebased,
+  without the author having to write the basic tests. After merging a feature,
+  add its gate name to `test/required-features.txt` so that a missing feature
+  turns into a failure.
+* **structure** (`test/structure.yml`) - image layout checks via
+  [container-structure-test](https://github.com/GoogleContainerTools/container-structure-test).
+  When the tool is not installed, its official container image is used instead.
+
+`bash test/run.sh --sabotage` is a self test: it breaks the backup call on a
+throwaway copy of the tree and expects the compat suite to fail. CI runs it so
+that the suites cannot be watered down into always passing.
+
+When you add a feature, please add a block to `test/features.sh` for it.
 
 ## Hooks
 
