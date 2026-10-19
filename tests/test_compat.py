@@ -455,6 +455,8 @@ class TestResticTag:
     def test_empty_tag_creates_untagged_backup(self, tag_run):
         """an empty RESTIC_TAG creates an untagged backup"""
         assert "Backup Successful" in tag_run.empty.out
+        [snapshot] = tag_run.snapshots_after_empty
+        assert not snapshot.get("tags")
 
     def test_empty_tag_still_produces_snapshot(self, tag_run):
         """an empty RESTIC_TAG still produces a snapshot"""
