@@ -135,3 +135,21 @@ def start_container(
 def remove_quietly(container: Container) -> None:
     with contextlib.suppress(docker.errors.NotFound):
         container.raw.remove(force=True, v=True)
+
+
+def run_once(client: docker.DockerClient, image: str, **kwargs: Any) -> str:
+    """Run a short-lived container and return its output.
+
+    `containers.run(remove=True)` keeps the image's anonymous volumes (VOLUME /data),
+    so run detached and remove the container together with its volumes.
+    """
+    container = client.containers.run(image, detach=True, **kwargs)
+    try:
+        result = container.wait()
+        output = container.logs(stdout=True, stderr=False).decode()
+        if result["StatusCode"] != 0:
+            raise CommandError(f"container exited {result['StatusCode']}:\n{output}")
+        return output
+    finally:
+        with contextlib.suppress(docker.errors.NotFound):
+            container.remove(force=True, v=True)

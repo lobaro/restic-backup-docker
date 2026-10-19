@@ -12,7 +12,7 @@ from pathlib import Path
 
 import docker
 import pytest
-from helpers import Container, remove_quietly, start_container
+from helpers import Container, remove_quietly, run_once, start_container
 
 ROOT = Path(__file__).resolve().parent.parent
 IMAGE = os.environ.get("IMAGE", "restic-backup-docker:test")
@@ -108,10 +108,13 @@ def _cleanup_leftovers(docker_client: docker.DockerClient) -> Iterator[None]:
 
 @pytest.fixture(scope="session")
 def detected_features(docker_client: docker.DockerClient, image: str) -> set[str]:
-    out = docker_client.containers.run(
-        image, entrypoint=["sh", "-c", FEATURE_PROBE], remove=True, labels={"rbd-test-run": RUN_ID}
+    out = run_once(
+        docker_client,
+        image,
+        entrypoint=["sh", "-c", FEATURE_PROBE],
+        labels={"rbd-test-run": RUN_ID},
     )
-    return set(out.decode().split())
+    return set(out.split())
 
 
 def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:

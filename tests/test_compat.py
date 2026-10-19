@@ -19,7 +19,7 @@ from types import SimpleNamespace
 import docker
 import pytest
 from conftest import LABELS
-from helpers import Container
+from helpers import Container, run_once
 
 HELLO = "backup me"
 PRE_BACKUP_HOOK = '#!/bin/sh\necho "PRE-HOOK-RAN"\n'
@@ -409,10 +409,10 @@ class TimezoneRunner:
     image: str
 
     def zone(self, env: dict[str, str] | None = None) -> str:
-        out = self.client.containers.run(
-            self.image, entrypoint=["date", "+%Z"], environment=env, remove=True, labels=LABELS
+        out = run_once(
+            self.client, self.image, entrypoint=["date", "+%Z"], environment=env, labels=LABELS
         )
-        return out.decode().strip()
+        return out.strip()
 
 
 @pytest.fixture(scope="module")
