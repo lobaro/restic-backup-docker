@@ -250,8 +250,8 @@ class TestCorruptedRepository:
 
     def test_corruption_not_reported_successful(self, corrupt_run):
         """a corrupted repository is not reported as successful"""
-        assert "Check Failed with Status" in corrupt_run.check.out  # it did run and report
         assert "Check Successful" not in corrupt_run.check.out
+        assert "Check Failed with Status" in corrupt_run.check.out  # the check did run and report
 
     def test_failing_check_writes_error_log(self, corrupt_run):
         """failing check writes check-error-last.log"""
