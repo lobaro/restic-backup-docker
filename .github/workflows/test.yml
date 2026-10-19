@@ -28,10 +28,6 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y -qq shellcheck
 
-      # The test scripts are new, so they are held to a clean bill of health.
-      - name: Run shellcheck on the test scripts
-        run: shellcheck --severity=warning test/*.sh
-
       # The image scripts declare #!/bin/sh but use a few bash constructs that
       # busybox ash happens to accept. Cleaning that up is a separate change,
       # so this step reports but does not block.
@@ -40,29 +36,9 @@ jobs:
           shellcheck --severity=warning backup.sh check.sh entry.sh build.sh run.sh \
             || echo "::warning::shellcheck reported findings in the image scripts, see the log above"
 
+  # Python suite (pytest) plus container-structure-test. Tools are pinned in
+  # mise.toml, Python dependencies in uv.lock.
   test:
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Build test image
-        run: docker build -t restic-backup-docker:test .
-
-      # container-structure-test is not installed: test/run.sh falls back to
-      # the official tool image, which keeps CI and local runs identical.
-      - name: Run test suites
-        run: bash test/run.sh --no-build
-
-      # Guards the guard: if someone waters the suites down until a broken
-      # backup no longer fails them, this step turns red.
-      - name: Verify the suite detects a broken backup
-        run: bash test/run.sh --sabotage
-
-  # Python suite (pytest), run beside the Bash suite while it is being ported.
-  # Tools are pinned in mise.toml, dependencies in uv.lock.
-  pytest:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -75,9 +51,10 @@ jobs:
       - name: Lint
         run: task lint
 
-      - name: Run Python suite
+      - name: Run test suites
         run: task test
 
-      # Guards the guard, as in the Bash job: a broken backup must fail the tests.
-      - name: Verify the Python suite detects a broken backup
+      # Guards the guard: if someone waters the suite down until a broken
+      # backup no longer fails it, this step turns red.
+      - name: Verify the suite detects a broken backup
         run: task test:sabotage
