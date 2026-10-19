@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import contextlib
 import os
+import signal
 import subprocess
 import uuid
 from collections.abc import Iterator
@@ -63,16 +65,35 @@ def image(request: pytest.FixtureRequest, docker_client: docker.DockerClient) ->
     return IMAGE
 
 
+def _remove_leftovers(client: docker.DockerClient) -> None:
+    """Remove containers, then volumes, labelled with this run; safe to call repeatedly."""
+    flt = {"label": f"rbd-test-run={RUN_ID}"}
+    try:
+        for container in client.containers.list(all=True, filters=flt):
+            with contextlib.suppress(docker.errors.NotFound):
+                container.remove(force=True, v=True)
+    finally:
+        for volume in client.volumes.list(filters=flt):
+            with contextlib.suppress(docker.errors.NotFound):
+                volume.remove(force=True)
+
+
 @pytest.fixture(scope="session", autouse=True)
 def _cleanup_leftovers(docker_client: docker.DockerClient) -> Iterator[None]:
-    """Remove every container/volume this run created, even after failures."""
-    yield
-    for container in docker_client.containers.list(
-        all=True, filters={"label": f"rbd-test-run={RUN_ID}"}
-    ):
-        container.remove(force=True, v=True)
-    for volume in docker_client.volumes.list(filters={"label": f"rbd-test-run={RUN_ID}"}):
-        volume.remove(force=True)
+    """Remove every container/volume this run created, even after failures or Ctrl-C.
+
+    A Ctrl-C in `task`/`uv` is forwarded as a second SIGINT while teardown runs, so
+    SIGINT/SIGTERM are ignored until cleanup is finished.
+    """
+    try:
+        yield
+    finally:
+        old = {sig: signal.signal(sig, signal.SIG_IGN) for sig in (signal.SIGINT, signal.SIGTERM)}
+        try:
+            _remove_leftovers(docker_client)
+        finally:
+            for sig, handler in old.items():
+                signal.signal(sig, handler)
 
 
 @pytest.fixture(scope="session")
