@@ -2,7 +2,7 @@
 name = "restic-backup-docker-tests"
 version = "0.0.0"
 description = "Container test suite for restic-backup-docker"
-requires-python = ">=3.13"
+requires-python = ">=3.13,<3.14"
 dependencies = []
 
 [dependency-groups]
