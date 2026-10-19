@@ -125,12 +125,10 @@ def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
                 raise pytest.UsageError(f"unknown feature gate: {marker.args[0]}")
 
 
-@pytest.fixture
-def _feature_gate(request: pytest.FixtureRequest, detected_features: set[str]) -> None:
-    """Skip a feature test when the image lacks it; fail when it is required."""
-    for marker in request.node.iter_markers("feature"):
+def _apply_feature_gate(node: pytest.Item | pytest.Class, detected: set[str]) -> None:
+    for marker in node.iter_markers("feature"):
         name = marker.args[0]
-        if name in detected_features:
+        if name in detected:
             continue
         if name in required_features():
             pytest.fail(
@@ -139,6 +137,18 @@ def _feature_gate(request: pytest.FixtureRequest, detected_features: set[str]) -
                 pytrace=False,
             )
         pytest.skip(f"feature '{name}' not in image yet")
+
+
+@pytest.fixture
+def _feature_gate(request: pytest.FixtureRequest, detected_features: set[str]) -> None:
+    """Skip a feature test when the image lacks it; fail when it is required."""
+    _apply_feature_gate(request.node, detected_features)
+
+
+@pytest.fixture(scope="class")
+def feature_gate_class(request: pytest.FixtureRequest, detected_features: set[str]) -> None:
+    """Same gate for class-scoped fixtures: request it first so no container starts when gated."""
+    _apply_feature_gate(request.node, detected_features)
 
 
 LABELS = {"rbd-test-run": RUN_ID}
@@ -151,9 +161,11 @@ def run_container(
     """Factory: `with run_container("name", env={...}) as c:` starts, waits, always removes."""
 
     @contextlib.contextmanager
-    def _run(suffix: str, env: dict[str, str] | None = None) -> Iterator[Container]:
+    def _run(
+        suffix: str, env: dict[str, str] | None = None, files: dict[str, str] | None = None
+    ) -> Iterator[Container]:
         container = start_container(
-            docker_client, image, f"rbd-test-{suffix}-{RUN_ID}", LABELS, env
+            docker_client, image, f"rbd-test-{suffix}-{RUN_ID}", LABELS, env, files
         )
         try:
             yield container

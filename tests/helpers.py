@@ -56,16 +56,7 @@ class Container:
     def write_file(self, path: str, content: str, *, executable: bool = False) -> None:
         """Create a file (and its directory) without a bind mount."""
         self.run("mkdir", "-p", str(PurePosixPath(path).parent))
-        data = content.encode()
-        info = tarfile.TarInfo(PurePosixPath(path).name)
-        info.size = len(data)
-        info.mode = 0o755 if executable else 0o644
-        buf = io.BytesIO()
-        with tarfile.open(fileobj=buf, mode="w") as tar:
-            tar.addfile(info, io.BytesIO(data))
-        buf.seek(0)
-        if not self.raw.put_archive(str(PurePosixPath(path).parent), buf):
-            raise CommandError(f"could not write {path}")
+        put_file(self.raw, path, content, executable=executable)
 
     def read_file(self, path: str) -> str:
         return self.run("cat", path)
@@ -103,23 +94,48 @@ class Container:
         return self.exec("restic", "restore", "latest", "--target", target)
 
 
+def put_file(raw: DockerContainer, path: str, content: str, *, executable: bool = False) -> None:
+    """Copy a file into an existing (also not yet started) container via a tar archive."""
+    data = content.encode()
+    info = tarfile.TarInfo(PurePosixPath(path).name)
+    info.size = len(data)
+    info.mode = 0o755 if executable else 0o644
+    buf = io.BytesIO()
+    with tarfile.open(fileobj=buf, mode="w") as tar:
+        tar.addfile(info, io.BytesIO(data))
+    buf.seek(0)
+    if not raw.put_archive(str(PurePosixPath(path).parent), buf):
+        raise CommandError(f"could not write {path}")
+
+
 def start_container(
     client: docker.DockerClient,
     image: str,
     name: str,
     labels: dict[str, str],
     env: dict[str, str] | None = None,
+    files: dict[str, str] | None = None,
 ) -> Container:
-    """Start the image with a cron far in the future, so only explicit backups run."""
+    """Start the image with a cron far in the future, so only explicit backups run.
+
+    `files` (path in container -> content) are placed before entry.sh runs, without a
+    bind mount, so tests can cover what the entrypoint does with them at startup.
+    """
     environment = {
         "RESTIC_PASSWORD": "testpassword",
         "RESTIC_TAG": "testtag",
         "BACKUP_CRON": "0 0 31 2 *",
         **(env or {}),
     }
-    raw = client.containers.run(
-        image, detach=True, name=name, environment=environment, labels=labels
-    )
+    if files:
+        raw = client.containers.create(image, name=name, environment=environment, labels=labels)
+        for path, content in files.items():
+            put_file(raw, path, content)
+        raw.start()
+    else:
+        raw = client.containers.run(
+            image, detach=True, name=name, environment=environment, labels=labels
+        )
     deadline = time.monotonic() + START_TIMEOUT
     while time.monotonic() < deadline:
         log = raw.logs().decode(errors="replace")
