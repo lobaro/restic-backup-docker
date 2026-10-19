@@ -1,6 +1,6 @@
 """Self test of the suite: prove that it goes red when the backup is broken.
 
-Ported from `test/run.sh --sabotage`. Run with `task test:sabotage`.
+Run with `task test:sabotage`.
 
 A throwaway copy of the tree gets a backup.sh whose `restic backup` call is a no-op, the
 nastiest kind of regression (the script still reports success). The compat tests run

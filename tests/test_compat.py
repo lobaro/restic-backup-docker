@@ -1,4 +1,4 @@
-"""Backwards-compatibility suite, ported from test/compat.sh.
+"""Backwards-compatibility suite.
 
 Everything here describes behaviour the image has today and that users depend on.
 A change that turns one of these red is a breaking change, whether or not intended.

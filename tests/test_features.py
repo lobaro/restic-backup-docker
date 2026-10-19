@@ -1,4 +1,4 @@
-"""Feature-gated tests, ported from test/features.sh.
+"""Feature-gated tests.
 
 Each class is guarded by `@pytest.mark.feature(<gate>)`: it runs as soon as the built
 image ships the feature (detected in conftest.py) and is skipped before that. A gate
