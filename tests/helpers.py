@@ -94,17 +94,40 @@ class Container:
         return self.exec("restic", "restore", "latest", "--target", target)
 
 
+def _dir_exists(raw: DockerContainer, path: str) -> bool:
+    try:
+        raw.get_archive(path, chunk_size=1)
+    except docker.errors.NotFound:
+        return False
+    return True
+
+
 def put_file(raw: DockerContainer, path: str, content: str, *, executable: bool = False) -> None:
-    """Copy a file into an existing (also not yet started) container via a tar archive."""
+    """Copy a file into an existing (also not yet started) container via a tar archive.
+
+    Missing parent directories are created (like `mkdir -p`); existing ones are left
+    untouched, so their mode and owner stay as the image defines them.
+    """
+    target = PurePosixPath(path)
+    missing = []
+    for parent in target.parents:
+        if _dir_exists(raw, str(parent)):
+            break
+        missing.append(parent)
     data = content.encode()
-    info = tarfile.TarInfo(PurePosixPath(path).name)
-    info.size = len(data)
-    info.mode = 0o755 if executable else 0o644
     buf = io.BytesIO()
     with tarfile.open(fileobj=buf, mode="w") as tar:
+        for directory in reversed(missing):
+            dir_info = tarfile.TarInfo(str(directory).lstrip("/"))
+            dir_info.type = tarfile.DIRTYPE
+            dir_info.mode = 0o755
+            tar.addfile(dir_info)
+        info = tarfile.TarInfo(str(target).lstrip("/"))
+        info.size = len(data)
+        info.mode = 0o755 if executable else 0o644
         tar.addfile(info, io.BytesIO(data))
     buf.seek(0)
-    if not raw.put_archive(str(PurePosixPath(path).parent), buf):
+    if not raw.put_archive("/", buf):
         raise CommandError(f"could not write {path}")
 
 
