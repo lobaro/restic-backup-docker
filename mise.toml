@@ -1,0 +1,8 @@
+[tools]
+python = "3.13"
+uv = "0.12.15"
+task = "3.54.0"
+"aqua:GoogleContainerTools/container-structure-test" = "1.22.1"
+
+[env]
+UV_PYTHON_PREFERENCE = "only-system"

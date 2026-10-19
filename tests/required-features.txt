@@ -1,0 +1,5 @@
+# Optional features that MUST be present in the built image.
+#
+# One gate name per line. Known gates: stream, docker-cli, bash, msmtp.
+# A listed feature that is absent turns its skip into a failure.
+# Empty on purpose: master currently ships none of the optional features.

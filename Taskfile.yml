@@ -1,0 +1,47 @@
+version: "3"
+
+vars:
+  IMAGE: '{{.IMAGE | default "restic-backup-docker:test"}}'
+
+env:
+  IMAGE: "{{.IMAGE}}"
+
+tasks:
+  default:
+    cmds:
+      - task --list
+    silent: true
+
+  build:
+    desc: Build the image under test
+    cmds:
+      - docker build --quiet -t {{.IMAGE}} .
+
+  lint:
+    desc: Lint the Python test suite with ruff
+    cmds:
+      - uv run ruff check tests
+      - uv run ruff format --check tests
+
+  test:
+    desc: Build the image and run all suites
+    cmds:
+      - task: build
+      - task: test:structure
+      - task: test:compat
+      - task: test:features
+
+  test:structure:
+    desc: Run container-structure-test against the image
+    cmds:
+      - container-structure-test test --image {{.IMAGE}} --config test/structure.yml
+
+  test:compat:
+    desc: Run the compat tests
+    cmds:
+      - uv run pytest -m "not feature" {{.CLI_ARGS}}
+
+  test:features:
+    desc: Run the feature-gated tests
+    cmds:
+      - uv run pytest -m feature {{.CLI_ARGS}}
