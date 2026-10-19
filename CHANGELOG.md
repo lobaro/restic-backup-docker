@@ -3,11 +3,11 @@
 ## Unreleased
 
 ### Added
-* Test suites in `test/` (compat, features, structure) that run the image as a real container, plus a `Test` GitHub Actions workflow running them on every pull request
+* Test suites in `tests/` (compat, features, structure) that run the image as a real container, plus a `Test` GitHub Actions workflow running them on every pull request. The suites are written in Python (pytest) and run via `mise install` and `task test`; `task test:sabotage` proves they detect a broken backup
 * `.gitattributes` pinning shell scripts, the Dockerfile and YAML files to LF line endings. With a Windows checkout (`core.autocrlf=true`) the scripts were checked out with CRLF, which made the built image fail to start with `exec /entry.sh: no such file or directory`
 
 ### Removed
-* `config-broken.yml` and `docker-compose.test.broken.yml`, replaced by `test/structure.yml` and the test workflow
+* `config-broken.yml` and `docker-compose.test.broken.yml`, replaced by `tests/structure.yml` and the test workflow
 
 ## v1.4.2
 ### Removed 
