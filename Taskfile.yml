@@ -45,3 +45,8 @@ tasks:
     desc: Run the feature-gated tests
     cmds:
       - uv run pytest -m feature {{.CLI_ARGS}}
+
+  test:sabotage:
+    desc: Prove the compat tests go red on an image with a broken backup
+    cmds:
+      - uv run python tests/sabotage.py

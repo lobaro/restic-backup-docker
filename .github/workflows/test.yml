@@ -77,3 +77,7 @@ jobs:
 
       - name: Run Python suite
         run: task test
+
+      # Guards the guard, as in the Bash job: a broken backup must fail the tests.
+      - name: Verify the Python suite detects a broken backup
+        run: task test:sabotage
