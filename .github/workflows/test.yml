@@ -59,3 +59,21 @@ jobs:
       # backup no longer fails them, this step turns red.
       - name: Verify the suite detects a broken backup
         run: bash test/run.sh --sabotage
+
+  # Python suite (pytest), run beside the Bash suite while it is being ported.
+  # Tools are pinned in mise.toml, dependencies in uv.lock.
+  pytest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install tools from mise.toml
+        uses: jdx/mise-action@v3
+
+      - name: Lint
+        run: task lint
+
+      - name: Run Python suite
+        run: task test
