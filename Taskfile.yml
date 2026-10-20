@@ -1,0 +1,55 @@
+version: "3"
+
+vars:
+  IMAGE: '{{.IMAGE | default "restic-backup-docker:test"}}'
+
+env:
+  IMAGE: "{{.IMAGE}}"
+
+tasks:
+  default:
+    cmds:
+      - task --list
+    silent: true
+
+  build:
+    desc: Build the image under test
+    cmds:
+      - docker build --quiet -t {{.IMAGE}} .
+
+  lint:
+    desc: Lint the Python test suite with ruff
+    cmds:
+      - uv run ruff check tests
+      - uv run ruff format --check tests
+
+  test:
+    desc: Build the image and run all suites; every suite runs, any failure fails the task
+    cmds:
+      - task: build
+      - cmd: |
+          rc=0
+          {{.TASK_EXE}} test:structure || rc=1
+          {{.TASK_EXE}} test:compat || rc=1
+          {{.TASK_EXE}} test:features || rc=1
+          exit $rc
+
+  test:structure:
+    desc: Run container-structure-test against the image and remove its containers and volumes
+    cmds:
+      - uv run python tests/structure.py
+
+  test:compat:
+    desc: Run the compat tests
+    cmds:
+      - uv run pytest -m "not feature" {{.CLI_ARGS}}
+
+  test:features:
+    desc: Run the feature-gated tests
+    cmds:
+      - uv run pytest -m feature {{.CLI_ARGS}}
+
+  test:sabotage:
+    desc: Prove the compat tests go red on an image with a broken backup
+    cmds:
+      - uv run python tests/sabotage.py

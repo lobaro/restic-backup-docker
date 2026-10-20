@@ -1,7 +1,7 @@
 # Optional features that MUST be present in the built image.
 #
 # One gate name per line. Known gates and the pull request that introduces
-# them (see test/features.sh):
+# them (see tests/test_features.py):
 #
 #   stream       stream backups via RESTIC_STREAM            PR #109
 #   docker-cli   docker cli inside the container             PR #99
@@ -15,4 +15,3 @@
 # tests are mandatory and a feature that silently disappears from the image
 # fails the build.
 #
-# Empty on purpose: master currently ships none of the optional features.

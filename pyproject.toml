@@ -1,0 +1,32 @@
+[project]
+name = "restic-backup-docker-tests"
+version = "0.0.0"
+description = "Container test suite for restic-backup-docker"
+requires-python = ">=3.13,<3.14"
+dependencies = []
+
+[dependency-groups]
+dev = [
+    "docker>=7.1",
+    "pytest>=8.3",
+    "ruff>=0.8",
+]
+
+[tool.uv]
+package = false
+default-groups = ["dev"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers"
+markers = [
+    "container(suffix, **env): container a test class runs against, with extra environment",
+    "feature(name): test needs an optional image feature; skipped when absent, failed when listed in tests/required-features.txt",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
