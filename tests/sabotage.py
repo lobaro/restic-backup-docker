@@ -24,6 +24,8 @@ import uuid
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
+from helpers import raise_interrupt
+
 ROOT = Path(__file__).resolve().parent.parent
 COPIED = ("Dockerfile", "backup.sh", "check.sh", "entry.sh")
 # Tests about the backup itself; each must fail on the sabotaged image.
@@ -35,10 +37,6 @@ EXPECTED_RED = (
 
 class Invalid(Exception):
     """The check itself is broken; the suite result means nothing."""
-
-
-def _raise_interrupt(signum: int, _frame: object) -> None:
-    raise KeyboardInterrupt(f"received {signal.Signals(signum).name}")
 
 
 def sabotage_tree(tmp: Path) -> None:
@@ -59,13 +57,15 @@ def sabotage_tree(tmp: Path) -> None:
         raise Invalid("sabotaged backup.sh is not executable")
 
 
-def failed_tests(report: Path) -> set[str]:
-    cases = ET.parse(report).getroot().iter("testcase")
-    return {
-        c.get("name", "")
-        for c in cases
-        if c.find("failure") is not None or c.find("error") is not None
-    }
+def red_tests(report: Path) -> tuple[set[str], set[str]]:
+    """Names of tests with an assertion failure, and of tests with an error (setup etc.)."""
+    try:
+        cases = list(ET.parse(report).getroot().iter("testcase"))
+    except ET.ParseError as exc:
+        raise Invalid(f"pytest report is malformed or truncated: {exc}") from exc
+    failures = {c.get("name", "") for c in cases if c.find("failure") is not None}
+    errors = {c.get("name", "") for c in cases if c.find("error") is not None}
+    return failures, errors
 
 
 def main() -> int:
@@ -105,8 +105,11 @@ def main() -> int:
             raise Invalid("log contains 'permission denied', suite failed for the wrong reason")
         if not report.is_file():
             raise Invalid(f"pytest produced no report (exit code {proc.returncode})")
-        red = failed_tests(report)
-        missing = [name for name in EXPECTED_RED if name not in red]
+        failures, errors = red_tests(report)
+        broken = [name for name in EXPECTED_RED if name in errors]
+        if broken:
+            raise Invalid(f"expected tests errored instead of failing an assertion: {broken}")
+        missing = [name for name in EXPECTED_RED if name not in failures]
         for name in missing:
             print(
                 f"SABOTAGE CHECK FAILED: expected assertion did not fail: {name}", file=sys.stderr
@@ -124,5 +127,5 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    signal.signal(signal.SIGTERM, _raise_interrupt)
+    signal.signal(signal.SIGTERM, raise_interrupt)
     sys.exit(main())
