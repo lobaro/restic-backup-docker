@@ -76,7 +76,7 @@ def red_tests(report: Path) -> tuple[set[str], set[str]]:
         failure = case.find("failure")
         if failure is None:
             continue
-        if STEP_FAILED in failure.get("message") or "":
+        if STEP_FAILED in (failure.get("message") or "") or STEP_FAILED in (failure.text or ""):
             errors.add(case.get("name", ""))
         else:
             failures.add(case.get("name", ""))
