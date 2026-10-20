@@ -5,7 +5,8 @@ A change that turns one of these red is a breaking change, whether or not intend
 
 Layout: every scenario fixture starts one throwaway container, performs the actions
 once and records the results; the tests only assert on what was recorded, so they do
-not depend on each other. Each docstring is the name of the matching Bash test.
+not depend on each other. A scenario step that fails fails only the tests that assert
+on its result. Each docstring states the behaviour the test pins.
 Tests run in a container with the image defaults: repository /mnt/restic, tag
 `testtag`, cron far in the future.
 """
@@ -14,12 +15,11 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from dataclasses import dataclass
-from types import SimpleNamespace
 
 import docker
 import pytest
 from conftest import LABELS
-from helpers import Container, run_once
+from helpers import Container, Scenario, run_once, running
 
 HELLO = "backup me"
 PRE_BACKUP_HOOK = '#!/bin/sh\necho "PRE-HOOK-RAN"\n'
@@ -36,13 +36,6 @@ def started(request: pytest.FixtureRequest, run_container) -> Iterator[Container
         yield container
 
 
-def _running(container: Container) -> Container:
-    """Scenarios that act on the container need it started; the start tests do not."""
-    if not container.started:
-        pytest.fail(f"container did not start:\n{container.start_log}", pytrace=False)
-    return container
-
-
 def _crontab_lines(container: Container) -> list[str]:
     return container.read_file("/var/spool/cron/crontabs/root").splitlines()
 
@@ -53,21 +46,21 @@ def _crontab_lines(container: Container) -> list[str]:
 
 
 @pytest.fixture(scope="class")
-def default_run(started: Container) -> SimpleNamespace:
-    c = _running(started)
+def default_run(started: Container) -> Scenario:
+    c = running(started)
     c.write_file("/data/hello.txt", HELLO)
-    run = SimpleNamespace(container=c)
-    run.backup = c.exec("/bin/backup")
-    run.snapshots_after_first = c.snapshots()
-    run.restore = c.restore_latest("/tmp/restore")
-    run.restored = c.exec("cat", "/tmp/restore/data/hello.txt")
-    run.backup_last_log = c.read_file("/var/log/backup-last.log")
-    c.run("/bin/backup")
-    run.snapshots_after_second = c.snapshots()
-    run.check = c.exec("/bin/check")
+    run = Scenario()
+    run.record("backup", lambda: c.exec("/bin/backup"))
+    run.record("snapshots_after_first", c.snapshots)
+    run.record("restore", lambda: c.restore_latest("/tmp/restore"))
+    run.record("restored", lambda: c.exec("cat", "/tmp/restore/data/hello.txt"))
+    run.record("backup_last_log", lambda: c.read_file("/var/log/backup-last.log"))
+    run.record("second_backup", lambda: c.run("/bin/backup"))
+    run.record("snapshots_after_second", c.snapshots)
+    run.record("check", lambda: c.exec("/bin/check"))
     c.write_file("/hooks/pre-backup.sh", PRE_BACKUP_HOOK, executable=True)
     c.write_file("/hooks/post-backup.sh", POST_BACKUP_HOOK, executable=True)
-    run.hook_backup = c.exec("/bin/backup")
+    run.record("hook_backup", lambda: c.exec("/bin/backup"))
     return run
 
 
@@ -173,14 +166,15 @@ class TestDefaultBackup:
 
 
 @pytest.fixture(scope="class")
-def checkcron_run(started: Container) -> SimpleNamespace:
-    c = _running(started)
-    run = SimpleNamespace(container=c, crontab=_crontab_lines(c))
+def checkcron_run(started: Container) -> Scenario:
+    c = running(started)
+    run = Scenario()
+    run.record("crontab", lambda: _crontab_lines(c))
     c.write_file("/data/hello.txt", HELLO)
-    c.run("/bin/backup")
+    run.record("backup", lambda: c.run("/bin/backup"))
     c.write_file("/hooks/pre-check.sh", PRE_CHECK_HOOK, executable=True)
     c.write_file("/hooks/post-check.sh", POST_CHECK_HOOK, executable=True)
-    run.check = c.exec("/bin/check")
+    run.record("check", lambda: c.exec("/bin/check"))
     return run
 
 
@@ -227,14 +221,15 @@ CORRUPT_CMD = 'f=$(find /mnt/restic/data -type f | head -n1); chmod u+w "$f"; pr
 
 
 @pytest.fixture(scope="class")
-def corrupt_run(started: Container) -> SimpleNamespace:
-    c = _running(started)
+def corrupt_run(started: Container) -> Scenario:
+    c = running(started)
     c.write_file("/data/hello.txt", HELLO)
-    c.run("/bin/backup")
-    run = SimpleNamespace(container=c, snapshots_before=c.snapshots())
-    c.run("sh", "-c", CORRUPT_CMD)
-    run.check = c.exec("/bin/check")
-    run.error_log_exists = c.file_exists("/var/log/check-error-last.log")
+    run = Scenario()
+    run.record("backup", lambda: c.run("/bin/backup"))
+    run.record("snapshots_before", c.snapshots)
+    run.record("corrupt", lambda: c.run("sh", "-c", CORRUPT_CMD))
+    run.record("check", lambda: c.exec("/bin/check"))
+    run.record("error_log_exists", lambda: c.file_exists("/var/log/check-error-last.log"))
     return run
 
 
@@ -264,14 +259,14 @@ class TestCorruptedRepository:
 
 
 @pytest.fixture(scope="class")
-def forget_run(started: Container) -> SimpleNamespace:
-    c = _running(started)
+def forget_run(started: Container) -> Scenario:
+    c = running(started)
     c.write_file("/data/hello.txt", HELLO)
-    c.run("/bin/backup")
-    first = c.snapshots()
-    run = SimpleNamespace(container=c, first=first)
-    run.second_backup = c.exec("/bin/backup")
-    run.snapshots = c.snapshots()
+    run = Scenario()
+    run.record("first_backup", lambda: c.run("/bin/backup"))
+    run.record("first", c.snapshots)
+    run.record("second_backup", lambda: c.exec("/bin/backup"))
+    run.record("snapshots", c.snapshots)
     return run
 
 
@@ -299,14 +294,15 @@ class TestForgetArgs:
 
 
 @pytest.fixture(scope="class")
-def jobargs_run(started: Container) -> SimpleNamespace:
-    c = _running(started)
+def jobargs_run(started: Container) -> Scenario:
+    c = running(started)
     c.write_file("/data/keep.txt", "keep")
     c.write_file("/data/skipme.txt", "skip")
-    run = SimpleNamespace(container=c, backup=c.exec("/bin/backup"))
-    run.restore = c.restore_latest("/tmp/restore")
-    run.restored_keep = c.exec("cat", "/tmp/restore/data/keep.txt")
-    run.paths = c.backed_up_paths()
+    run = Scenario()
+    run.record("backup", lambda: c.exec("/bin/backup"))
+    run.record("restore", lambda: c.restore_latest("/tmp/restore"))
+    run.record("restored_keep", lambda: c.exec("cat", "/tmp/restore/data/keep.txt"))
+    run.record("paths", c.backed_up_paths)
     return run
 
 
@@ -334,14 +330,15 @@ class TestJobArgs:
 
 
 @pytest.fixture(scope="class")
-def sources_run(started: Container) -> SimpleNamespace:
-    c = _running(started)
+def sources_run(started: Container) -> Scenario:
+    c = running(started)
     c.write_file("/opt/custom/custom.txt", "custom source")
     c.write_file("/data/ignored.txt", "should not be backed up")
-    c.run("/bin/backup")
-    run = SimpleNamespace(container=c, restore=c.restore_latest("/tmp/restore"))
-    run.restored = c.exec("cat", "/tmp/restore/opt/custom/custom.txt")
-    run.paths = c.backed_up_paths()
+    run = Scenario()
+    run.record("backup", lambda: c.run("/bin/backup"))
+    run.record("restore", lambda: c.restore_latest("/tmp/restore"))
+    run.record("restored", lambda: c.exec("cat", "/tmp/restore/opt/custom/custom.txt"))
+    run.record("paths", c.backed_up_paths)
     return run
 
 
@@ -364,16 +361,15 @@ class TestBackupSources:
 
 
 @pytest.fixture(scope="class")
-def failure_run(started: Container) -> SimpleNamespace:
-    c = _running(started)
+def failure_run(started: Container) -> Scenario:
+    c = running(started)
     c.write_file("/data/hello.txt", HELLO)
     # Back up a source that does not exist. The repository stays the initialised
     # default one, so the snapshot list below is of the repo the run really used.
-    run = SimpleNamespace(
-        container=c, backup=c.exec("/bin/backup", env={"BACKUP_SOURCES": "/does-not-exist"})
-    )
-    run.error_log_exists = c.file_exists("/var/log/backup-error-last.log")
-    run.snapshots = c.snapshots()
+    run = Scenario()
+    run.record("backup", lambda: c.exec("/bin/backup", env={"BACKUP_SOURCES": "/does-not-exist"}))
+    run.record("error_log_exists", lambda: c.file_exists("/var/log/backup-error-last.log"))
+    run.record("snapshots", c.snapshots)
     return run
 
 
@@ -440,13 +436,14 @@ class TestTimezone:
 
 
 @pytest.fixture(scope="class")
-def tag_run(started: Container) -> SimpleNamespace:
-    c = _running(started)
+def tag_run(started: Container) -> Scenario:
+    c = running(started)
     c.write_file("/data/hello.txt", HELLO)
-    run = SimpleNamespace(container=c, empty=c.exec("/bin/backup", env={"RESTIC_TAG": ""}))
-    run.snapshots_after_empty = c.snapshots()
-    run.unset = c.exec("env", "-u", "RESTIC_TAG", "/bin/backup")
-    run.snapshots_after_unset = c.snapshots()
+    run = Scenario()
+    run.record("empty", lambda: c.exec("/bin/backup", env={"RESTIC_TAG": ""}))
+    run.record("snapshots_after_empty", c.snapshots)
+    run.record("unset", lambda: c.exec("env", "-u", "RESTIC_TAG", "/bin/backup"))
+    run.record("snapshots_after_unset", c.snapshots)
     return run
 
 

@@ -2,8 +2,8 @@
 
 Each class is guarded by `@pytest.mark.feature(<gate>)`: it runs as soon as the built
 image ships the feature (detected in conftest.py) and is skipped before that. A gate
-listed in tests/required-features.txt turns the skip into a failure. Each docstring is
-the name of the matching Bash test.
+listed in tests/required-features.txt turns the skip into a failure. A scenario step
+that fails fails only the tests that assert on its result.
 
 Scenario fixtures request `feature_gate_class` first, so a gated class never starts a
 container on an image without the feature.
@@ -12,11 +12,10 @@ container on an image without the feature.
 from __future__ import annotations
 
 from collections.abc import Iterator
-from types import SimpleNamespace
 
 import pytest
 from conftest import LABELS
-from helpers import Container, run_once
+from helpers import Container, Scenario, run_once, running
 
 STREAM_ENV = {
     "RESTIC_STREAM": "1",
@@ -30,60 +29,60 @@ if [[ "${arr[1]}" == "two" ]]; then echo "BASH-HOOK-RAN"; fi
 MSMTP_CONFIG = "defaults\naccount default\nhost localhost\n"
 
 
-def _running(container: Container) -> Container:
-    if not container.started:
-        pytest.fail(f"container did not start:\n{container.start_log}", pytrace=False)
-    return container
-
-
 # ---------------------------------------------------------------------------
 # stream backup (PR #109)
 # ---------------------------------------------------------------------------
 
 
 @pytest.fixture(scope="class")
-def stream_run(feature_gate_class, run_container) -> Iterator[SimpleNamespace]:
+def stream_run(feature_gate_class, run_container) -> Iterator[Scenario]:
     with run_container("stream", env=STREAM_ENV) as c:
-        _running(c)
-        run = SimpleNamespace(container=c)
-        run.backup = c.exec("/bin/backup")
-        run.snapshots = c.snapshots()
-        c.exec("restic", "restore", "latest", "--target", "/tmp/restore")
-        run.restored = c.exec("cat", "/tmp/restore/stream.txt")
+        running(c)
+        run = Scenario()
+        run.record("backup", lambda: c.exec("/bin/backup"))
+        run.record("snapshots", c.snapshots)
+        run.record("restore", lambda: c.restore_latest("/tmp/restore"))
+        run.record("restored", lambda: c.exec("cat", "/tmp/restore/stream.txt"))
         yield run
 
 
 @pytest.fixture(scope="class")
-def stream_jobargs_run(feature_gate_class, run_container) -> Iterator[SimpleNamespace]:
+def stream_jobargs_run(feature_gate_class, run_container) -> Iterator[Scenario]:
     # --host is used because it is visible in the snapshot metadata of a stdin backup.
     with run_container(
         "stream-jobargs", env={**STREAM_ENV, "RESTIC_JOB_ARGS": "--host=jobargshost"}
     ) as c:
-        _running(c)
-        c.exec("/bin/backup")
+        running(c)
+        run = Scenario()
+        run.record("backup", lambda: c.run("/bin/backup"))
         # restic's own --host filter only returns snapshots whose hostname equals the
         # value; both directions are checked so the filter is known to discriminate.
-        yield SimpleNamespace(
-            matching=c.restic_json("snapshots", "--host", "jobargshost") or [],
-            unrelated=c.restic_json("snapshots", "--host", "some-other-host") or [],
+        run.record("matching", lambda: c.restic_json("snapshots", "--host", "jobargshost") or [])
+        run.record(
+            "unrelated", lambda: c.restic_json("snapshots", "--host", "some-other-host") or []
         )
+        yield run
 
 
 @pytest.fixture(scope="class")
-def stream_misconfigured_run(feature_gate_class, run_container) -> Iterator[SimpleNamespace]:
+def stream_misconfigured_run(feature_gate_class, run_container) -> Iterator[Scenario]:
     with run_container("stream-misconfigured", env={"RESTIC_STREAM": "1"}) as c:
-        _running(c)
-        backup = c.exec("/bin/backup")
-        yield SimpleNamespace(backup=backup, snapshots=c.snapshots())
+        running(c)
+        run = Scenario()
+        run.record("backup", lambda: c.exec("/bin/backup"))
+        run.record("snapshots", c.snapshots)
+        yield run
 
 
 @pytest.fixture(scope="class")
-def stream_disabled_run(feature_gate_class, run_container) -> Iterator[SimpleNamespace]:
+def stream_disabled_run(feature_gate_class, run_container) -> Iterator[Scenario]:
     with run_container("stream-disabled") as c:
-        _running(c)
+        running(c)
         c.write_file("/data/hello.txt", "backup me")
-        c.exec("/bin/backup")
-        yield SimpleNamespace(snapshots=c.snapshots())
+        run = Scenario()
+        run.record("backup", lambda: c.run("/bin/backup"))
+        run.record("snapshots", c.snapshots)
+        yield run
 
 
 @pytest.mark.feature("stream")
@@ -98,6 +97,7 @@ class TestStream:
 
     def test_stream_content_stored_under_filename(self, stream_run):
         """stream content is stored under RESTIC_STREAM_FILENAME"""
+        assert stream_run.restore.rc == 0, stream_run.restore.out
         assert stream_run.restored.rc == 0, stream_run.restored.out
         assert stream_run.restored.out == "hello-stream\n"
 
@@ -142,12 +142,14 @@ def test_docker_cli_usable(docker_client, image):
 
 
 @pytest.fixture(scope="class")
-def bash_hook_run(feature_gate_class, run_container) -> Iterator[SimpleNamespace]:
+def bash_hook_run(feature_gate_class, run_container) -> Iterator[Scenario]:
     with run_container("bash-hooks") as c:
-        _running(c)
+        running(c)
         c.write_file("/hooks/pre-backup.sh", BASH_HOOK, executable=True)
         c.write_file("/data/hello.txt", "backup me")
-        yield SimpleNamespace(backup=c.exec("/bin/backup"))
+        run = Scenario()
+        run.record("backup", lambda: c.exec("/bin/backup"))
+        yield run
 
 
 @pytest.mark.feature("bash")
@@ -166,18 +168,20 @@ class TestBashHooks:
 def msmtp_config_run(feature_gate_class, run_container) -> Iterator[Container]:
     # entry.sh copies the config at startup, so it must exist before the container starts.
     with run_container("msmtp-config", files={"/config/msmtprc": MSMTP_CONFIG}) as c:
-        yield _running(c)
+        yield running(c)
 
 
 @pytest.fixture(scope="class")
-def msmtp_missing_config_run(feature_gate_class, run_container) -> Iterator[SimpleNamespace]:
+def msmtp_missing_config_run(feature_gate_class, run_container) -> Iterator[Scenario]:
     # Users who configured mail before msmtp existed must not lose their backups.
     env = {"MAILX_ARGS": "-r from@example.com -s subject to@example.com"}
     with run_container("msmtp-missing-config", env=env) as c:
-        _running(c)
+        running(c)
         c.write_file("/data/hello.txt", "backup me")
-        backup = c.exec("/bin/backup")
-        yield SimpleNamespace(backup=backup, snapshots=c.snapshots())
+        run = Scenario()
+        run.record("backup", lambda: c.exec("/bin/backup"))
+        run.record("snapshots", c.snapshots)
+        yield run
 
 
 @pytest.mark.feature("msmtp")

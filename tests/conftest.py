@@ -12,7 +12,7 @@ from pathlib import Path
 
 import docker
 import pytest
-from helpers import Container, remove_quietly, run_once, start_container
+from helpers import Container, raise_interrupt, remove_quietly, run_once, start_container
 
 ROOT = Path(__file__).resolve().parent.parent
 IMAGE = os.environ.get("IMAGE", "restic-backup-docker:test")
@@ -39,13 +39,9 @@ def required_features() -> set[str]:
     return {line for line in lines if line and not line.startswith("#")}
 
 
-def _raise_interrupt(signum: int, _frame: object) -> None:
-    raise KeyboardInterrupt(f"received {signal.Signals(signum).name}")
-
-
 def pytest_configure(config: pytest.Config) -> None:
     """Turn SIGTERM into KeyboardInterrupt so session teardown (cleanup) runs."""
-    signal.signal(signal.SIGTERM, _raise_interrupt)
+    signal.signal(signal.SIGTERM, raise_interrupt)
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:

@@ -10,13 +10,16 @@ from __future__ import annotations
 import contextlib
 import io
 import json
+import signal
 import tarfile
 import time
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import PurePosixPath
 from typing import Any
 
 import docker
+import pytest
 from docker.models.containers import Container as DockerContainer
 
 START_TIMEOUT = 60
@@ -31,6 +34,49 @@ class ExecResult:
 
 class CommandError(AssertionError):
     pass
+
+
+def raise_interrupt(signum: int, _frame: object) -> None:
+    """Signal handler: turn SIGTERM into KeyboardInterrupt so cleanup code runs."""
+    raise KeyboardInterrupt(f"received {signal.Signals(signum).name}")
+
+
+class StepFailed(AssertionError):
+    pass
+
+
+class Scenario:
+    """Results of the actions of one scenario fixture.
+
+    `record(name, fn)` runs one step and stores its result or its error. Reading an
+    attribute of a failed step raises, so only the tests that assert on that step fail;
+    the other tests of the class still run against what the scenario did produce.
+    """
+
+    def __init__(self) -> None:
+        self._steps: dict[str, tuple[Any, BaseException | None]] = {}
+
+    def record(self, name: str, step: Callable[[], Any]) -> None:
+        try:
+            self._steps[name] = (step(), None)
+        except Exception as exc:  # noqa: BLE001 - the error is re-raised on access
+            self._steps[name] = (None, exc)
+
+    def __getattr__(self, name: str) -> Any:
+        try:
+            value, error = self.__dict__["_steps"][name]
+        except KeyError:
+            raise AttributeError(name) from None
+        if error is not None:
+            raise StepFailed(f"scenario step '{name}' failed: {error}") from error
+        return value
+
+
+def running(container: Container) -> Container:
+    """Scenarios that act on the container need it started; the start tests do not."""
+    if not container.started:
+        pytest.fail(f"container did not start:\n{container.start_log}", pytrace=False)
+    return container
 
 
 class Container:
@@ -95,11 +141,20 @@ class Container:
 
 
 def _dir_exists(raw: DockerContainer, path: str) -> bool:
+    """Ask the daemon with a HEAD request on the archive endpoint: stat only, no tar stream.
+
+    A container that is not started cannot exec `test -d`, and `get_archive` would leave
+    its streaming response open.
+    """
+    api = raw.client.api
+    response = api.head(api._url("/containers/{0}/archive", raw.id), params={"path": path})
     try:
-        raw.get_archive(path, chunk_size=1)
-    except docker.errors.NotFound:
-        return False
-    return True
+        if response.status_code == 404:
+            return False
+        response.raise_for_status()
+        return True
+    finally:
+        response.close()
 
 
 def put_file(raw: DockerContainer, path: str, content: str, *, executable: bool = False) -> None:
