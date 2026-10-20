@@ -34,15 +34,15 @@ fileExistenceTests:
   - name: 'backup script'
     path: '/bin/backup'
     shouldExist: true
-    isExecutableBy: 'other'
+    permissions: '-rwxr-xr-x'
   - name: 'check script'
     path: '/bin/check'
     shouldExist: true
-    isExecutableBy: 'other'
+    permissions: '-rwxr-xr-x'
   - name: 'entrypoint'
     path: '/entry.sh'
     shouldExist: true
-    isExecutableBy: 'other'
+    permissions: '-rwxr-xr-x'
   - name: 'default repository mount point'
     path: '/mnt/restic'
     shouldExist: true

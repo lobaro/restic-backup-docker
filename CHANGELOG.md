@@ -6,6 +6,9 @@
 * Test suites in `tests/` (compat, features, structure) that run the image as a real container, plus a `Test` GitHub Actions workflow running them on every pull request. The suites are written in Python (pytest) and run via `mise install` and `task test`; `task test:sabotage` proves they detect a broken backup
 * `.gitattributes` pinning shell scripts, the Dockerfile and YAML files to LF line endings. With a Windows checkout (`core.autocrlf=true`) the scripts were checked out with CRLF, which made the built image fail to start with `exec /entry.sh: no such file or directory`
 
+### Changed
+* The Dockerfile now sets the mode of `backup`, `check` and `entry.sh` itself (`COPY --chmod=755`), so the image no longer depends on the build host's umask or on the exec bit of the checked-out scripts. Building now needs BuildKit (default since Docker 23)
+
 ### Removed
 * `config-broken.yml` and `docker-compose.test.broken.yml`, replaced by `tests/structure.yml` and the test workflow
 
