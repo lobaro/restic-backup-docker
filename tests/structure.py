@@ -2,14 +2,18 @@
 
 container-structure-test starts one container per test and never removes it. The image
 declares `VOLUME /data`, so every container drags an anonymous volume along that outlives
-`docker rm`. With `--save` the containers are kept, and this wrapper removes the ones the
-run created, together with their volumes (`remove(v=True)`). Run with `task test:structure`.
+`docker rm`. With `--save` the containers are kept, and this wrapper removes the ones of
+the image under test that the run created, together with their volumes (`remove(v=True)`);
+containers of other images or of the compat suite (a parallel run, a compose stack) are left
+alone.
+Run with `task test:structure`.
 
 Exit code: the one of container-structure-test.
 """
 
 from __future__ import annotations
 
+import contextlib
 import os
 import signal
 import subprocess
@@ -17,19 +21,26 @@ import sys
 from pathlib import Path
 
 import docker
+from helpers import raise_interrupt
 
 CONFIG = Path(__file__).with_name("structure.yml")
 
 
-def _raise_interrupt(signum: int, _frame: object) -> None:
-    raise KeyboardInterrupt(f"received {signal.Signals(signum).name}")
+def _containers_of(client: docker.DockerClient, image_id: str) -> list:
+    """Containers of the image that container-structure-test could have created.
+
+    Containers of the compat suite carry the `rbd-test-run` label; their owner removes them.
+    """
+    found = client.containers.list(all=True, filters={"ancestor": image_id})
+    return [c for c in found if "rbd-test-run" not in c.labels]
 
 
 def main() -> int:
     image = os.environ.get("IMAGE", "restic-backup-docker:test")
-    signal.signal(signal.SIGTERM, _raise_interrupt)
+    signal.signal(signal.SIGTERM, raise_interrupt)
     client = docker.from_env()
-    before = {c.id for c in client.containers.list(all=True)}
+    image_id = client.images.get(image).id
+    before = {c.id for c in _containers_of(client, image_id)}
     try:
         return subprocess.run(
             [
@@ -45,9 +56,10 @@ def main() -> int:
         ).returncode
     finally:
         signal.signal(signal.SIGINT, signal.SIG_IGN)
-        for container in client.containers.list(all=True):
+        for container in _containers_of(client, image_id):
             if container.id not in before:
-                container.remove(v=True, force=True)
+                with contextlib.suppress(docker.errors.NotFound):
+                    container.remove(v=True, force=True)
         signal.signal(signal.SIGINT, signal.default_int_handler)
 
 
