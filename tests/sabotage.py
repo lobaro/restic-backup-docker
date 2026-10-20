@@ -54,10 +54,6 @@ def sabotage_tree(tmp: Path) -> None:
     if patched == lines:
         raise Invalid("sabotage patch did not apply, backup.sh changed shape")
     script.write_text("".join(patched))
-    # Dockerfile COPY has no chmod: the image only works when the file is executable.
-    script.chmod(script.stat().st_mode | 0o111)
-    if not os.access(script, os.X_OK):
-        raise Invalid("sabotaged backup.sh is not executable")
 
 
 def red_tests(report: Path) -> tuple[set[str], set[str]]:

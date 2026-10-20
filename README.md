@@ -92,6 +92,8 @@ Build the container (the container is named `backup-test`):
 ./build.sh
 ```
 
+The image needs BuildKit (default since Docker 23; on older Docker set `DOCKER_BUILDKIT=1`).
+
 Run the container:
 ```
 ./run.sh
