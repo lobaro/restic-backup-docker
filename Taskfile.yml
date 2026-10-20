@@ -24,12 +24,15 @@ tasks:
       - uv run ruff format --check tests
 
   test:
-    desc: Build the image and run all suites
+    desc: Build the image and run all suites; every suite runs, any failure fails the task
     cmds:
       - task: build
-      - task: test:structure
-      - task: test:compat
-      - task: test:features
+      - cmd: |
+          rc=0
+          {{.TASK_EXE}} test:structure || rc=1
+          {{.TASK_EXE}} test:compat || rc=1
+          {{.TASK_EXE}} test:features || rc=1
+          exit $rc
 
   test:structure:
     desc: Run container-structure-test against the image and remove its containers and volumes
