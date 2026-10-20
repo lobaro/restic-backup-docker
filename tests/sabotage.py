@@ -123,7 +123,7 @@ def main() -> int:
         failures, errors = red_tests(report)
         broken = [name for name in EXPECTED_RED if name in errors]
         if broken:
-            raise Invalid(f"expected tests errored or hit a failed scenario step instead of failing an assertion: {broken}")
+            raise Invalid(f"expected tests hit an error or failed step, not an assertion: {broken}")
         missing = [name for name in EXPECTED_RED if name not in failures]
         for name in missing:
             print(
