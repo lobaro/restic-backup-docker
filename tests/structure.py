@@ -8,7 +8,10 @@ containers of other images or of the compat suite (a parallel run, a compose sta
 alone.
 Run with `task test:structure`.
 
-Exit code: the one of container-structure-test.
+A run longer than CST_TIMEOUT seconds (default 300) is killed: container-structure-test has
+no timeout of its own and can block forever waiting for a container.
+
+Exit code: the one of container-structure-test; 124 on timeout.
 """
 
 from __future__ import annotations
@@ -24,6 +27,7 @@ import docker
 from helpers import raise_interrupt
 
 CONFIG = Path(__file__).with_name("structure.yml")
+TIMEOUT_EXIT = 124
 
 
 def _containers_of(client: docker.DockerClient, image_id: str) -> list:
@@ -42,18 +46,24 @@ def main() -> int:
     image_id = client.images.get(image).id
     before = {c.id for c in _containers_of(client, image_id)}
     try:
-        return subprocess.run(
-            [
-                "container-structure-test",
-                "test",
-                "--save",
-                "--image",
-                image,
-                "--config",
-                str(CONFIG),
-            ],
-            check=False,
-        ).returncode
+        timeout = float(os.environ.get("CST_TIMEOUT", "300"))
+        try:
+            return subprocess.run(
+                [
+                    "container-structure-test",
+                    "test",
+                    "--save",
+                    "--image",
+                    image,
+                    "--config",
+                    os.environ.get("CST_CONFIG", str(CONFIG)),
+                ],
+                check=False,
+                timeout=timeout,
+            ).returncode
+        except subprocess.TimeoutExpired:
+            print(f"container-structure-test timed out after {timeout:g} s", file=sys.stderr)
+            return TIMEOUT_EXIT
     finally:
         signal.signal(signal.SIGINT, signal.SIG_IGN)
         for container in _containers_of(client, image_id):
