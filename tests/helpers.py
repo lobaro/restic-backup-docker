@@ -41,8 +41,12 @@ def raise_interrupt(signum: int, _frame: object) -> None:
     raise KeyboardInterrupt(f"received {signal.Signals(signum).name}")
 
 
-class StepFailed(AssertionError):
-    pass
+class StepFailed(Exception):
+    """A scenario step could not run; not an assertion about the behaviour under test.
+
+    Deliberately no AssertionError: sabotage.py tells it apart from a real assertion
+    failure by the exception name in the JUnit report.
+    """
 
 
 class Scenario:

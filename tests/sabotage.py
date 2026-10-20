@@ -35,6 +35,9 @@ EXPECTED_RED = (
 )
 
 
+STEP_FAILED = "StepFailed"  # name of helpers.StepFailed in the JUnit report
+
+
 class Invalid(Exception):
     """The check itself is broken; the suite result means nothing."""
 
@@ -58,13 +61,25 @@ def sabotage_tree(tmp: Path) -> None:
 
 
 def red_tests(report: Path) -> tuple[set[str], set[str]]:
-    """Names of tests with an assertion failure, and of tests with an error (setup etc.)."""
+    """Names of tests with an assertion failure, and of tests with an error.
+
+    Errors are setup errors and failed scenario steps (StepFailed): neither is an assertion
+    about the behaviour under test.
+    """
     try:
         cases = list(ET.parse(report).getroot().iter("testcase"))
     except ET.ParseError as exc:
         raise Invalid(f"pytest report is malformed or truncated: {exc}") from exc
-    failures = {c.get("name", "") for c in cases if c.find("failure") is not None}
     errors = {c.get("name", "") for c in cases if c.find("error") is not None}
+    failures = set()
+    for case in cases:
+        failure = case.find("failure")
+        if failure is None:
+            continue
+        if STEP_FAILED in failure.get("message") or "":
+            errors.add(case.get("name", ""))
+        else:
+            failures.add(case.get("name", ""))
     return failures, errors
 
 
@@ -108,7 +123,7 @@ def main() -> int:
         failures, errors = red_tests(report)
         broken = [name for name in EXPECTED_RED if name in errors]
         if broken:
-            raise Invalid(f"expected tests errored instead of failing an assertion: {broken}")
+            raise Invalid(f"expected tests errored or hit a failed scenario step instead of failing an assertion: {broken}")
         missing = [name for name in EXPECTED_RED if name not in failures]
         for name in missing:
             print(
