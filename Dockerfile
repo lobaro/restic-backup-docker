@@ -15,7 +15,7 @@ RUN if [ "$TARGETPLATFORM" = "linux/amd64" ]; then \
 
 FROM docker.io/restic/restic:0.18.0
 
-RUN apk add --update --no-cache curl mailx shadow
+RUN apk add --update --no-cache bash curl docker-cli mailx shadow tzdata
 
 COPY --from=rclone /bin/rclone /bin/rclone
 
@@ -27,6 +27,7 @@ ENV RESTIC_REPOSITORY=/mnt/restic
 ENV RESTIC_PASSWORD=""
 ENV RESTIC_TAG=""
 ENV NFS_TARGET=""
+ENV TZ="UTC"
 ENV BACKUP_CRON="0 */6 * * *"
 ENV CHECK_CRON=""
 ENV RESTIC_INIT_ARGS=""
